@@ -1,0 +1,40 @@
+{
+  "name": "mdv-swaplibro-navbar",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Reusable SwapLibro React Native navbars for book listings, listing filters, and inbox tabs.",
+  "license": "UNLICENSED",
+  "main": "index.ts",
+  "types": "index.ts",
+  "react-native": "index.ts",
+  "files": [
+    "components",
+    "theme.ts",
+    "index.ts",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "react-native": "./index.ts",
+      "types": "./index.ts",
+      "default": "./index.ts"
+    },
+    "./components": {
+      "react-native": "./components/index.ts",
+      "types": "./components/index.ts",
+      "default": "./components/index.ts"
+    },
+    "./theme": {
+      "react-native": "./theme.ts",
+      "types": "./theme.ts",
+      "default": "./theme.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "@react-native-vector-icons/material-design-icons": ">=12",
+    "react": ">=18",
+    "react-native": ">=0.72",
+    "react-native-safe-area-context": ">=4"
+  }
+}
