@@ -24,6 +24,11 @@
       "types": "./components/index.ts",
       "default": "./components/index.ts"
     },
+    "./components/CalendarPeriodPicker": {
+      "react-native": "./components/CalendarPeriodPicker.tsx",
+      "types": "./components/CalendarPeriodPicker.tsx",
+      "default": "./components/CalendarPeriodPicker.tsx"
+    },
     "./theme": {
       "react-native": "./theme.ts",
       "types": "./theme.ts",
