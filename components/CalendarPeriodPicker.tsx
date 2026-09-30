@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 export type CalendarPeriodPickerMode = 'monthly' | 'weekly';
 export type CalendarPeriodPickerTheme = {
@@ -103,58 +103,61 @@ export function CalendarPeriodPicker({
   ];
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView
-        style={[styles.safeArea, { backgroundColor: theme.background }]}
-      >
-        <View style={styles.header}>
-          <View style={styles.headerText}>
-            <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
-            {description ? (
-              <Text style={[styles.description, { color: theme.muted }]}>
-                {description}
-              </Text>
-            ) : null}
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Close period picker"
-            onPress={onClose}
-            style={[
-              styles.doneButton,
-              { backgroundColor: theme.surface, borderColor: theme.border },
-            ]}
-          >
-            <Text style={[styles.doneText, { color: theme.text }]}>Done</Text>
-          </Pressable>
-        </View>
-        <ScrollView
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
+      <SafeAreaProvider>
+        <SafeAreaView
+          edges={['top', 'bottom', 'left', 'right']}
+          style={[styles.safeArea, { backgroundColor: theme.background }]}
         >
-          <View style={styles.weekdayRow}>
-            {DAY_LABELS.map((day, index) => (
-              <Text
-                key={`${day}-${index}`}
-                style={[styles.weekday, { color: theme.muted }]}
-              >
-                {day}
-              </Text>
-            ))}
+          <View style={styles.header}>
+            <View style={styles.headerText}>
+              <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
+              {description ? (
+                <Text style={[styles.description, { color: theme.muted }]}>
+                  {description}
+                </Text>
+              ) : null}
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Close period picker"
+              onPress={onClose}
+              style={[
+                styles.doneButton,
+                { backgroundColor: theme.surface, borderColor: theme.border },
+              ]}
+            >
+              <Text style={[styles.doneText, { color: theme.text }]}>Done</Text>
+            </Pressable>
           </View>
-          {offsets.map(offset => (
-            <PeriodCard
-              key={offset}
-              mode={mode}
-              offset={offset}
-              anchor={anchor}
-              monthlyStartDay={monthlyStartDay}
-              selected={offset === selectedOffset}
-              theme={theme}
-              onPress={() => onSelect(offset)}
-            />
-          ))}
-        </ScrollView>
-      </SafeAreaView>
+          <ScrollView
+            contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.weekdayRow}>
+              {DAY_LABELS.map((day, index) => (
+                <Text
+                  key={`${day}-${index}`}
+                  style={[styles.weekday, { color: theme.muted }]}
+                >
+                  {day}
+                </Text>
+              ))}
+            </View>
+            {offsets.map(offset => (
+              <PeriodCard
+                key={offset}
+                mode={mode}
+                offset={offset}
+                anchor={anchor}
+                monthlyStartDay={monthlyStartDay}
+                selected={offset === selectedOffset}
+                theme={theme}
+                onPress={() => onSelect(offset)}
+              />
+            ))}
+          </ScrollView>
+        </SafeAreaView>
+      </SafeAreaProvider>
     </Modal>
   );
 }
