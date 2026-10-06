@@ -1,6 +1,6 @@
 {
   "name": "mdv-swaplibro-navbar",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": false,
   "description": "Reusable SwapLibro React Native navbars for book listings, listing filters, and inbox tabs.",
   "license": "UNLICENSED",
