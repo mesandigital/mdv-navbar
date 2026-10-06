@@ -248,7 +248,7 @@ function CatalogMarketplaceActions({
           style={buttonStyle}
         >
           <MaterialDesignIcons
-            name={createIcon}
+            name={createIcon as any}
             color={theme.colors.accent}
             size={24}
           />
