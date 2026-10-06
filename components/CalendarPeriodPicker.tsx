@@ -36,7 +36,15 @@ export const calendarPeriodPickerTheme: CalendarPeriodPickerTheme = {
 };
 export type CalendarPeriodPickerProps = {
   visible: boolean;
+  inline?: boolean;
+  renderHeader?: (props: {
+    title: string;
+    description?: string;
+    onClose: () => void;
+  }) => React.ReactNode;
   mode?: CalendarPeriodPickerMode;
+  modeOptions?: CalendarPeriodPickerMode[];
+  onModeChange?: (mode: CalendarPeriodPickerMode) => void;
   title?: string;
   description?: string;
   selectedOffset?: number;
@@ -44,6 +52,8 @@ export type CalendarPeriodPickerProps = {
   monthlyStartDay?: number;
   weeksToShow?: number;
   monthsToShow?: number;
+  disabledOffsets?: number[];
+  onBlockedSelect?: (offset: number) => void;
   theme?: CalendarPeriodPickerThemeOverride;
   onClose: () => void;
   onSelect: (offset: number) => void;
@@ -73,7 +83,11 @@ const cycleStart = (date: Date, startDay: number) =>
 
 export function CalendarPeriodPicker({
   visible,
+  inline = false,
+  renderHeader,
   mode = 'monthly',
+  modeOptions,
+  onModeChange,
   title = 'Choose period',
   description,
   selectedOffset = 0,
@@ -81,6 +95,8 @@ export function CalendarPeriodPicker({
   monthlyStartDay = 1,
   weeksToShow = 12,
   monthsToShow = 15,
+  disabledOffsets = [],
+  onBlockedSelect,
   theme: themeOverride,
   onClose,
   onSelect,
@@ -94,70 +110,118 @@ export function CalendarPeriodPicker({
     [initialDate, mode, monthlyStartDay],
   );
   const periodCount = mode === 'weekly' ? weeksToShow : monthsToShow;
-  const pastCount = mode === 'weekly' ? 8 : 12;
+  const pastCount = Math.min(
+    mode === 'weekly' ? 8 : 12,
+    Math.max(periodCount - 1, 0),
+  );
   const futureCount = Math.max(periodCount - pastCount - 1, 0);
   const offsets = [
     0,
     ...Array.from({ length: pastCount }, (_, index) => -(index + 1)),
     ...Array.from({ length: futureCount }, (_, index) => index + 1),
   ];
+  const pickerContent = (
+    <SafeAreaProvider>
+      <SafeAreaView
+        edges={['top', 'bottom', 'left', 'right']}
+        style={[styles.safeArea, { backgroundColor: theme.background }]}
+      >
+        {renderHeader ? (
+          renderHeader({ title, description, onClose })
+        ) : (
+        <View style={styles.header}>
+          <View style={styles.headerText}>
+            <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
+            {description ? (
+              <Text style={[styles.description, { color: theme.muted }]}>
+                {description}
+              </Text>
+            ) : null}
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Close period picker"
+            onPress={onClose}
+            style={[styles.doneButton, { backgroundColor: theme.accent }]}
+          >
+            <Text style={[styles.doneText, { color: theme.selectedText }]}>
+              Close
+            </Text>
+          </Pressable>
+        </View>
+        )}
+        {modeOptions && modeOptions.length > 1 && onModeChange ? (
+          <View style={styles.modePicker}>
+            {modeOptions.map(option => (
+              <Pressable
+                key={option}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: option === mode }}
+                onPress={() => onModeChange(option)}
+                style={[
+                  styles.modeOption,
+                  option === mode && {
+                    backgroundColor: theme.selectedSurface,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.modeOptionText,
+                    {
+                      color: option === mode ? theme.selectedText : theme.muted,
+                    },
+                  ]}
+                >
+                  {option === 'weekly' ? 'Week' : 'Month'}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.weekdayRow}>
+            {DAY_LABELS.map((day, index) => (
+              <Text
+                key={`${day}-${index}`}
+                style={[styles.weekday, { color: theme.muted }]}
+              >
+                {day}
+              </Text>
+            ))}
+          </View>
+          {offsets.map(offset => (
+            <PeriodCard
+              key={offset}
+              mode={mode}
+              offset={offset}
+              anchor={anchor}
+              monthlyStartDay={monthlyStartDay}
+              selected={offset === selectedOffset}
+              disabled={disabledOffsets.includes(offset)}
+              theme={theme}
+              onPress={() => {
+                if (disabledOffsets.includes(offset)) {
+                  onBlockedSelect?.(offset);
+                  return;
+                }
+                onSelect(offset);
+              }}
+            />
+          ))}
+        </ScrollView>
+      </SafeAreaView>
+    </SafeAreaProvider>
+  );
+
+  if (inline) return pickerContent;
+
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaProvider>
-        <SafeAreaView
-          edges={['top', 'bottom', 'left', 'right']}
-          style={[styles.safeArea, { backgroundColor: theme.background }]}
-        >
-          <View style={styles.header}>
-            <View style={styles.headerText}>
-              <Text style={[styles.title, { color: theme.text }]}>{title}</Text>
-              {description ? (
-                <Text style={[styles.description, { color: theme.muted }]}>
-                  {description}
-                </Text>
-              ) : null}
-            </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Close period picker"
-              onPress={onClose}
-              style={[
-                styles.doneButton,
-                { backgroundColor: theme.surface, borderColor: theme.border },
-              ]}
-            >
-              <Text style={[styles.doneText, { color: theme.text }]}>Done</Text>
-            </Pressable>
-          </View>
-          <ScrollView
-            contentContainerStyle={styles.content}
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.weekdayRow}>
-              {DAY_LABELS.map((day, index) => (
-                <Text
-                  key={`${day}-${index}`}
-                  style={[styles.weekday, { color: theme.muted }]}
-                >
-                  {day}
-                </Text>
-              ))}
-            </View>
-            {offsets.map(offset => (
-              <PeriodCard
-                key={offset}
-                mode={mode}
-                offset={offset}
-                anchor={anchor}
-                monthlyStartDay={monthlyStartDay}
-                selected={offset === selectedOffset}
-                theme={theme}
-                onPress={() => onSelect(offset)}
-              />
-            ))}
-          </ScrollView>
-        </SafeAreaView>
-      </SafeAreaProvider>
+      {pickerContent}
     </Modal>
   );
 }
@@ -168,6 +232,7 @@ function PeriodCard({
   anchor,
   monthlyStartDay,
   selected,
+  disabled,
   theme,
   onPress,
 }: {
@@ -178,10 +243,11 @@ function PeriodCard({
   selected: boolean;
   theme: CalendarPeriodPickerTheme;
   onPress: () => void;
+  disabled: boolean;
 }) {
   const isCurrent = offset === 0;
   const isFuture = offset > 0;
-  const isSelected = selected && !isFuture;
+  const isSelected = selected && !isFuture && !disabled;
   const start =
     mode === 'weekly'
       ? new Date(
@@ -225,7 +291,10 @@ function PeriodCard({
   return (
     <Pressable
       accessibilityRole="radio"
-      accessibilityState={{ selected: isSelected, disabled: isFuture }}
+      accessibilityState={{
+        selected: isSelected,
+        disabled: isFuture || disabled,
+      }}
       disabled={isFuture}
       onPress={isFuture ? undefined : onPress}
       style={[
@@ -237,7 +306,7 @@ function PeriodCard({
             ? theme.background
             : theme.surface,
           borderColor: isSelected ? theme.selectedSurface : theme.border,
-          opacity: isFuture ? 0.55 : 1,
+          opacity: isFuture ? 0.55 : disabled ? 0.7 : 1,
         },
       ]}
     >
@@ -253,14 +322,26 @@ function PeriodCard({
               ? `${displayDate(start)} → ${displayDate(end)}`
               : `${monthName(start)} → ${monthName(end)}`}
           </Text>
-          <Text style={[styles.cardCaption, { color: theme.muted }]}>
+          <Text
+            style={[
+              styles.cardCaption,
+              { color: isSelected ? theme.selectedText : theme.muted },
+            ]}
+          >
             {displayDate(start, mode === 'monthly')} –{' '}
             {displayDate(end, mode === 'monthly')}
           </Text>
         </View>
-        {isCurrent || isSelected ? (
-          <Text style={[styles.selected, { color: theme.accent }]}>
-            {isCurrent ? 'Current' : 'Selected'}
+        {disabled ? (
+          <Text style={[styles.selected, { color: theme.muted }]}>Pro</Text>
+        ) : isCurrent || isSelected ? (
+          <Text
+            style={[
+              styles.selected,
+              { color: isSelected ? theme.selectedText : theme.accent },
+            ]}
+          >
+            {isCurrent ? 'Live' : 'Selected'}
           </Text>
         ) : isFuture ? (
           <Text style={[styles.selected, { color: theme.muted }]}>
@@ -274,15 +355,10 @@ function PeriodCard({
             key={`${offset}-${index}`}
             style={[
               styles.dateCell,
-              { backgroundColor: isSelected ? '#263A34' : theme.tile },
+              { backgroundColor: isSelected ? theme.background : theme.tile },
             ]}
           >
-            <Text
-              style={[
-                styles.dateText,
-                { color: isSelected ? theme.selectedText : theme.text },
-              ]}
-            >
+            <Text style={[styles.dateText, { color: theme.text }]}>
               {cell ? cell.getDate() : '…'}
             </Text>
           </View>
@@ -299,18 +375,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
+  },
+  modePicker: {
+    flexDirection: 'row',
+    gap: 6,
+    marginLeft: 12,
+  },
+  modeOption: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  modeOptionText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   headerText: { flex: 1 },
-  title: { fontSize: 20, fontWeight: '600' },
-  description: { fontSize: 13, lineHeight: 19, marginTop: 3 },
+  title: { fontSize: 22, fontWeight: '600' },
+  description: { fontSize: 13, fontWeight: '600', marginTop: 3 },
   doneButton: {
-    minHeight: 40,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 14,
+    minHeight: 38,
+    borderRadius: 20,
+    paddingHorizontal: 18,
     justifyContent: 'center',
   },
   doneText: { fontSize: 13, fontWeight: '600' },

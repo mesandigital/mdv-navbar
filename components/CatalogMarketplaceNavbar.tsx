@@ -1,11 +1,14 @@
 import React from 'react';
 import {
+  LayoutAnimation,
+  Platform,
   Pressable,
   ScrollView,
   StyleProp,
   StyleSheet,
   Text,
   TextInput,
+  UIManager,
   View,
   ViewStyle,
 } from 'react-native';
@@ -23,13 +26,23 @@ export type CatalogMarketplaceTitleOption = {
   badgeCount?: number;
 };
 
+export type CatalogMarketplaceCategory = {
+  key: string;
+  label: string;
+  badgeCount?: number;
+  children?: CatalogMarketplaceCategory[];
+};
+
 export type CatalogMarketplaceNavbarProps = {
   categories: string[];
+  categoryItems?: CatalogMarketplaceCategory[];
   categoryBadgeCounts?: Record<string, number>;
   maxVisibleCategories?: number;
   categoryVariant?: 'pills' | 'segments';
   segmentSizing?: 'fill' | 'content';
   includeAllCategory?: boolean;
+  allCategoryLabel?: string;
+  categoryBackAccessibilityLabel?: string;
   brandLabel?: string;
   brandSubtitle?: string;
   showBrandBar?: boolean;
@@ -39,6 +52,7 @@ export type CatalogMarketplaceNavbarProps = {
   searchAccessory?: React.ReactNode;
   layout?: 'list' | 'grid';
   selectedCategory?: string | null;
+  focusedCategoryKey?: string | null;
   searchLabel?: string | null;
   searchPlaceholder?: string;
   searchInput?: boolean;
@@ -54,6 +68,7 @@ export type CatalogMarketplaceNavbarProps = {
   onLayoutChange?: (layout: 'list' | 'grid') => void;
   onTitleOptionPress?: (key: string) => void;
   onCategoryPress: (category: string | null) => void;
+  onCategoryBack?: () => void;
 };
 
 function useTheme(theme?: SwapLibroNavbarThemeOverride) {
@@ -247,6 +262,8 @@ export function CatalogMarketplaceNavbar({
   categoryVariant = 'pills',
   segmentSizing = 'fill',
   includeAllCategory = true,
+  allCategoryLabel = 'All',
+  categoryBackAccessibilityLabel = 'Back to categories',
   brandLabel,
   brandSubtitle,
   showBrandBar = true,
@@ -256,6 +273,8 @@ export function CatalogMarketplaceNavbar({
   searchAccessory,
   layout = 'list',
   selectedCategory,
+  categoryItems,
+  focusedCategoryKey,
   searchLabel,
   searchPlaceholder = 'Search titles, authors…',
   searchInput = false,
@@ -271,6 +290,7 @@ export function CatalogMarketplaceNavbar({
   onLayoutChange,
   onTitleOptionPress,
   onCategoryPress,
+  onCategoryBack,
 }: CatalogMarketplaceNavbarProps) {
   const theme = useTheme(themeOverride);
 
@@ -328,6 +348,7 @@ export function CatalogMarketplaceNavbar({
           maxVisibleCategories={maxVisibleCategories}
           segmentSizing={segmentSizing}
           includeAllCategory={includeAllCategory}
+          allCategoryLabel={allCategoryLabel}
           selectedCategory={selectedCategory}
           onCategoryPress={onCategoryPress}
           theme={theme}
@@ -338,8 +359,13 @@ export function CatalogMarketplaceNavbar({
           categoryBadgeCounts={categoryBadgeCounts}
           maxVisibleCategories={maxVisibleCategories}
           includeAllCategory={includeAllCategory}
+          allCategoryLabel={allCategoryLabel}
+          categoryBackAccessibilityLabel={categoryBackAccessibilityLabel}
           selectedCategory={selectedCategory}
+          categoryItems={categoryItems}
+          focusedCategoryKey={focusedCategoryKey}
           onCategoryPress={onCategoryPress}
+          onCategoryBack={onCategoryBack}
           theme={theme}
         />
       )}
@@ -465,24 +491,58 @@ export function CatalogMarketplaceBrandBar(
 
 export function CatalogMarketplaceCategoryTabs({
   categories,
+  categoryItems,
   categoryBadgeCounts,
   maxVisibleCategories = 8,
   includeAllCategory = true,
+  allCategoryLabel = 'All',
+  categoryBackAccessibilityLabel = 'Back to categories',
   selectedCategory,
+  focusedCategoryKey,
   onCategoryPress,
+  onCategoryBack,
   theme: themeOverride,
 }: Pick<
   CatalogMarketplaceNavbarProps,
   | 'categories'
+  | 'categoryItems'
   | 'categoryBadgeCounts'
   | 'includeAllCategory'
+  | 'allCategoryLabel'
+  | 'categoryBackAccessibilityLabel'
   | 'maxVisibleCategories'
   | 'selectedCategory'
+  | 'focusedCategoryKey'
   | 'onCategoryPress'
+  | 'onCategoryBack'
   | 'theme'
 >) {
   const theme = useTheme(themeOverride);
-  const visibleCategories = categories.slice(0, maxVisibleCategories);
+  const focusedCategory = categoryItems?.find(
+    category => category.key === focusedCategoryKey,
+  );
+  const visibleItems = focusedCategory
+    ? [focusedCategory, ...(focusedCategory.children ?? [])]
+    : categoryItems?.length
+    ? categoryItems
+    : categories.slice(0, maxVisibleCategories).map(label => ({
+        key: label,
+        label,
+        badgeCount: categoryBadgeCounts?.[label],
+      }));
+  const visibleCategories = visibleItems.slice(0, maxVisibleCategories + 1);
+
+  React.useEffect(() => {
+    if (
+      Platform.OS === 'android' &&
+      UIManager.setLayoutAnimationEnabledExperimental
+    ) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+    if (focusedCategoryKey !== undefined) {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    }
+  }, [focusedCategoryKey]);
 
   if (!includeAllCategory && visibleCategories.length === 0) return null;
 
@@ -495,9 +555,29 @@ export function CatalogMarketplaceCategoryTabs({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.categoryScroller}
       >
-        {includeAllCategory ? (
+        {focusedCategory ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={categoryBackAccessibilityLabel}
+            onPress={() => onCategoryBack?.()}
+            hitSlop={8}
+            style={[
+              styles.categoryBackButton,
+              {
+                backgroundColor: theme.colors.inputBackground,
+                borderColor: theme.colors.border,
+              },
+            ]}
+          >
+            <MaterialDesignIcons
+              name="close"
+              size={20}
+              color={theme.colors.textSecondary}
+            />
+          </Pressable>
+        ) : includeAllCategory ? (
           <CatalogMarketplacePill
-            label="All"
+            label={allCategoryLabel}
             selected={!selectedCategory}
             onPress={() => onCategoryPress(null)}
             theme={theme}
@@ -505,11 +585,17 @@ export function CatalogMarketplaceCategoryTabs({
         ) : null}
         {visibleCategories.map(category => (
           <CatalogMarketplacePill
-            key={category}
-            label={category}
-            badgeCount={categoryBadgeCounts?.[category]}
-            selected={selectedCategory === category}
-            onPress={() => onCategoryPress(category)}
+            key={category.key}
+            label={category.label}
+            badgeCount={
+              category.badgeCount ?? categoryBadgeCounts?.[category.label]
+            }
+            selected={
+              selectedCategory === category.key ||
+              selectedCategory === category.label ||
+              focusedCategoryKey === category.key
+            }
+            onPress={() => onCategoryPress(category.key)}
             theme={theme}
           />
         ))}
@@ -524,6 +610,7 @@ export function CatalogMarketplaceSegmentTabs({
   maxVisibleCategories = 8,
   segmentSizing = 'fill',
   includeAllCategory = true,
+  allCategoryLabel = 'All',
   selectedCategory,
   onCategoryPress,
   theme: themeOverride,
@@ -532,6 +619,7 @@ export function CatalogMarketplaceSegmentTabs({
   | 'categories'
   | 'categoryBadgeCounts'
   | 'includeAllCategory'
+  | 'allCategoryLabel'
   | 'maxVisibleCategories'
   | 'segmentSizing'
   | 'selectedCategory'
@@ -541,7 +629,7 @@ export function CatalogMarketplaceSegmentTabs({
   const theme = useTheme(themeOverride);
   const visibleCategories = categories.slice(0, maxVisibleCategories);
   const segments: Array<{ label: string; value: string | null }> = [
-    ...(includeAllCategory ? [{ label: 'All', value: null }] : []),
+    ...(includeAllCategory ? [{ label: allCategoryLabel, value: null }] : []),
     ...visibleCategories.map(category => ({
       label: category,
       value: category,
@@ -859,6 +947,14 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 16,
     paddingRight: 16,
+  },
+  categoryBackButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   categoryHeader: {
     paddingBottom: 8,
