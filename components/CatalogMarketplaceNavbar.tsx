@@ -59,6 +59,7 @@ export type CatalogMarketplaceNavbarProps = {
   showSearch?: boolean;
   searchValue?: string;
   createAccessibilityLabel?: string;
+  createIcon?: string;
   activeFilterCount?: number;
   theme?: SwapLibroNavbarThemeOverride;
   onSearchPress?: () => void;
@@ -161,6 +162,7 @@ type CatalogMarketplaceActionsProps = Pick<
   CatalogMarketplaceNavbarProps,
   | 'activeFilterCount'
   | 'createAccessibilityLabel'
+  | 'createIcon'
   | 'layout'
   | 'onCreatePress'
   | 'onFilterPress'
@@ -171,6 +173,7 @@ type CatalogMarketplaceActionsProps = Pick<
 function CatalogMarketplaceActions({
   activeFilterCount = 0,
   createAccessibilityLabel = 'List a book',
+  createIcon = 'plus',
   layout = 'list',
   onCreatePress,
   onFilterPress,
@@ -245,7 +248,7 @@ function CatalogMarketplaceActions({
           style={buttonStyle}
         >
           <MaterialDesignIcons
-            name="plus"
+            name={createIcon}
             color={theme.colors.accent}
             size={24}
           />
@@ -281,6 +284,7 @@ export function CatalogMarketplaceNavbar({
   showSearch = true,
   searchValue,
   createAccessibilityLabel = 'List a book',
+  createIcon = 'plus',
   activeFilterCount = 0,
   theme: themeOverride,
   onSearchPress,
@@ -312,6 +316,7 @@ export function CatalogMarketplaceNavbar({
           onFilterPress={onFilterPress}
           activeFilterCount={activeFilterCount}
           createAccessibilityLabel={createAccessibilityLabel}
+          createIcon={createIcon}
           theme={theme}
         />
       ) : null}
@@ -333,6 +338,7 @@ export function CatalogMarketplaceNavbar({
           <CatalogMarketplaceActions
             activeFilterCount={activeFilterCount}
             createAccessibilityLabel={createAccessibilityLabel}
+            createIcon={createIcon}
             layout={layout}
             onCreatePress={onCreatePress}
             onFilterPress={onFilterPress}
@@ -379,6 +385,7 @@ type CatalogMarketplaceBrandBarProps = Pick<
   | 'brandLabel'
   | 'brandSubtitle'
   | 'createAccessibilityLabel'
+  | 'createIcon'
   | 'layout'
   | 'onCreatePress'
   | 'onFilterPress'
@@ -476,6 +483,7 @@ export function CatalogMarketplaceBrandBar(
             <CatalogMarketplaceActions
               activeFilterCount={props.activeFilterCount}
               createAccessibilityLabel={props.createAccessibilityLabel}
+              createIcon={props.createIcon}
               layout={props.layout}
               onCreatePress={props.onCreatePress}
               onFilterPress={props.onFilterPress}
