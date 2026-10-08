@@ -57,6 +57,7 @@ export type CatalogMarketplaceNavbarProps = {
   searchPlaceholder?: string;
   searchInput?: boolean;
   showSearch?: boolean;
+  insetFilter?: boolean;
   searchValue?: string;
   createAccessibilityLabel?: string;
   createIcon?: string;
@@ -139,12 +140,13 @@ export function CatalogMarketplaceSearchBar({
           placeholderTextColor={theme.colors.textMuted}
           returnKeyType="search"
           onSubmitEditing={onSubmitEditing}
-          style={[styles.searchInput, { color: theme.colors.textPrimary }]}
+          style={[styles.searchInput, { color: theme.colors.textPrimary }, theme.fontFamily ? { fontFamily: theme.fontFamily, fontWeight: 'normal' } : null]}
         />
       ) : (
         <Text
           style={[
             styles.searchText,
+            theme.fontFamily ? { fontFamily: theme.fontFamily, fontWeight: 'normal' } : null,
             {
               color: label ? theme.colors.textPrimary : theme.colors.textMuted,
             },
@@ -168,6 +170,7 @@ type CatalogMarketplaceActionsProps = Pick<
   | 'onFilterPress'
   | 'onLayoutChange'
   | 'theme'
+  | 'insetFilter'
 >;
 
 function CatalogMarketplaceActions({
@@ -175,6 +178,7 @@ function CatalogMarketplaceActions({
   createAccessibilityLabel = 'List a book',
   createIcon = 'plus',
   layout = 'list',
+  insetFilter = false,
   onCreatePress,
   onFilterPress,
   onLayoutChange,
@@ -187,6 +191,8 @@ function CatalogMarketplaceActions({
       backgroundColor: theme.colors.inputBackground,
       borderColor: theme.colors.border,
     },
+    insetFilter && styles.insetFilterButton,
+    insetFilter && { backgroundColor: theme.colors.surfaceMuted },
   ];
 
   if (!onLayoutChange && !onFilterPress && !onCreatePress) return null;
@@ -213,6 +219,7 @@ function CatalogMarketplaceActions({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Filter results"
+          hitSlop={4}
           onPress={onFilterPress}
           style={buttonStyle}
         >
@@ -282,6 +289,7 @@ export function CatalogMarketplaceNavbar({
   searchPlaceholder = 'Search titles, authors…',
   searchInput = false,
   showSearch = true,
+  insetFilter = false,
   searchValue,
   createAccessibilityLabel = 'List a book',
   createIcon = 'plus',
@@ -321,7 +329,7 @@ export function CatalogMarketplaceNavbar({
         />
       ) : null}
       {showSearch ? (
-        <View style={styles.searchRow}>
+        <View style={[styles.searchRow, insetFilter && styles.insetSearchRow]}>
           <CatalogMarketplaceSearchBar
             input={searchInput}
             label={searchLabel}
@@ -330,21 +338,24 @@ export function CatalogMarketplaceNavbar({
             onPress={onSearchPress}
             onChangeText={onSearchChangeText}
             theme={theme}
-            style={styles.headerSearch}
+            style={[styles.headerSearch, insetFilter && styles.insetSearch]}
           />
           {searchAccessory ? (
             <View style={styles.searchAccessory}>{searchAccessory}</View>
           ) : null}
-          <CatalogMarketplaceActions
-            activeFilterCount={activeFilterCount}
-            createAccessibilityLabel={createAccessibilityLabel}
-            createIcon={createIcon}
-            layout={layout}
-            onCreatePress={onCreatePress}
-            onFilterPress={onFilterPress}
-            onLayoutChange={onLayoutChange}
-            theme={theme}
-          />
+          <View style={insetFilter ? styles.insetActions : undefined}>
+            <CatalogMarketplaceActions
+              insetFilter={insetFilter}
+              activeFilterCount={activeFilterCount}
+              createAccessibilityLabel={createAccessibilityLabel}
+              createIcon={createIcon}
+              layout={layout}
+              onCreatePress={onCreatePress}
+              onFilterPress={onFilterPress}
+              onLayoutChange={onLayoutChange}
+              theme={theme}
+            />
+          </View>
         </View>
       ) : null}
       {categoryVariant === 'segments' ? (
@@ -746,11 +757,20 @@ export function CatalogMarketplacePill({
       accessibilityState={{ selected }}
       accessibilityLabel={badgeCount ? `${label}, ${badgeCount} unread` : label}
       onPress={onPress}
-      style={[styles.categoryTab, { borderColor: theme.colors.border }]}
+      hitSlop={5}
+      style={({ pressed }) => [
+        styles.categoryTab,
+        {
+          borderColor: theme.colors.border,
+          backgroundColor: selected ? theme.colors.accent : 'transparent',
+        },
+        pressed && { transform: [{ scale: 0.97 }] },
+      ]}
     >
       <Text
         style={[
           styles.categoryTabText,
+          theme.fontFamily ? { fontFamily: theme.fontFamily, fontWeight: 'normal' } : null,
           {
             color: selected ? theme.colors.surface : theme.colors.textSecondary,
           },
@@ -781,19 +801,20 @@ export function CatalogMarketplacePill({
           </Text>
         </View>
       ) : null}
-      {selected ? (
-        <View
-          style={[
-            styles.categoryUnderline,
-            { backgroundColor: theme.colors.accent },
-          ]}
-        />
-      ) : null}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  insetSearchRow: { paddingHorizontal: 20 },
+  insetSearch: { minHeight: 48, paddingRight: 52 },
+  insetActions: { position: 'absolute', right: 26, top: 6 },
+  insetFilterButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 0,
+  },
   container: {
     gap: 0,
     paddingHorizontal: 0,

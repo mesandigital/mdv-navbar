@@ -1,4 +1,5 @@
 export type SwapLibroNavbarTheme = {
+  fontFamily?: string;
   colors: {
     accent: string;
     highlight: string;
@@ -15,6 +16,7 @@ export type SwapLibroNavbarTheme = {
 };
 
 export type SwapLibroNavbarThemeOverride = {
+  fontFamily?: string;
   colors?: Partial<SwapLibroNavbarTheme['colors']>;
 };
 
@@ -60,6 +62,7 @@ export function mergeSwapLibroNavbarTheme(
   theme?: SwapLibroNavbarThemeOverride,
 ): SwapLibroNavbarTheme {
   return {
+    fontFamily: theme?.fontFamily,
     colors: {
       ...swapLibroNavbarTheme.colors,
       ...(theme?.colors ?? {}),

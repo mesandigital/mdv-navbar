@@ -6,3 +6,5 @@ export * from './InboxTabsNavbar';
 export * from './BookSearchFilterStrip';
 export * from './BookSearchFiltersModal';
 export * from './CalendarPeriodPicker';
+export * from './CatalogCategoryCarousel';
+export * from './SearchActionRow';

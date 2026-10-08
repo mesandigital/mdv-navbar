@@ -1,6 +1,6 @@
 {
   "name": "mdv-swaplibro-navbar",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "private": false,
   "description": "Reusable SwapLibro React Native navbars for book listings, listing filters, and inbox tabs.",
   "license": "UNLICENSED",
@@ -29,6 +29,16 @@
       "types": "./components/CalendarPeriodPicker.tsx",
       "default": "./components/CalendarPeriodPicker.tsx"
     },
+    "./components/CatalogCategoryCarousel": {
+      "react-native": "./components/CatalogCategoryCarousel.tsx",
+      "types": "./components/CatalogCategoryCarousel.tsx",
+      "default": "./components/CatalogCategoryCarousel.tsx"
+    },
+    "./components/SearchActionRow": {
+      "react-native": "./components/SearchActionRow.tsx",
+      "types": "./components/SearchActionRow.tsx",
+      "default": "./components/SearchActionRow.tsx"
+    },
     "./theme": {
       "react-native": "./theme.ts",
       "types": "./theme.ts",
@@ -40,6 +50,8 @@
     "@react-native-vector-icons/material-design-icons": ">=12",
     "react": ">=18",
     "react-native": ">=0.72",
-    "react-native-safe-area-context": ">=4"
+    "react-native-safe-area-context": ">=4",
+    "react-native-svg": ">=15",
+    "mdv-typography": ">=0.1.0"
   }
 }
