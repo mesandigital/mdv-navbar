@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { MaterialDesignIcons } from "@react-native-vector-icons/material-design-icons/static";
@@ -12,6 +13,7 @@ import {
   SwapLibroNavbarThemeOverride,
   mergeSwapLibroNavbarTheme,
   swapLibroNavbarTypography,
+  swapLibroNavbarTheme,
 } from "../theme";
 
 export type BookSearchCreditRange = "one" | "two-to-three" | "four-plus";
@@ -24,6 +26,27 @@ export type BookSearchFiltersValue = {
   conditions: string[];
   genres: string[];
   creditRange?: BookSearchCreditRange;
+  languages?: string[];
+};
+
+export type BookSearchFiltersLabels = {
+  title: string;
+  close: string;
+  reset: string;
+  location: string;
+  area: string;
+  barrio: string;
+  anyLocation: string;
+  selectArea: string;
+  selectBarrio: string;
+  selectAreaFirst: string;
+  condition: string;
+  genres: string;
+  filterGenres: string;
+  languages: string;
+  creditValue: string;
+  showResults: (count: number, booksLabel: string) => string;
+  noResults: string;
 };
 
 export type BookSearchFilterOption = {
@@ -49,13 +72,17 @@ export type BookSearchFiltersModalProps = {
   locationGroups?: BookSearchLocationGroup[];
   conditionOptions: BookSearchFilterOption[];
   genreOptions: BookSearchFilterOption[];
+  languageOptions?: BookSearchFilterOption[];
   resultCount: number;
+  resultCountForValue?: (value: BookSearchFiltersValue) => number;
+  showCreditRange?: boolean;
   safeAreaInsets?: Partial<BookSearchSafeAreaInsets>;
   theme?: SwapLibroNavbarThemeOverride;
   onChange: (value: BookSearchFiltersValue) => void;
   onReset: () => void;
   onClose: () => void;
   onApply: () => void;
+  labels?: Partial<BookSearchFiltersLabels>;
 };
 
 const CREDIT_OPTIONS: Array<{
@@ -86,17 +113,46 @@ export function BookSearchFiltersModal({
   locationGroups = [],
   conditionOptions,
   genreOptions,
+  languageOptions = [],
   resultCount,
+  resultCountForValue,
+  showCreditRange = true,
   safeAreaInsets: safeAreaInsetsOverride,
   theme: themeOverride,
   onChange,
   onReset,
   onClose,
   onApply,
+  labels: labelsOverride,
 }: BookSearchFiltersModalProps) {
+  const labels: BookSearchFiltersLabels = {
+    title: "Filters",
+    close: "Close filters",
+    reset: "Reset",
+    location: "Location",
+    area: "Area",
+    barrio: "Barrio",
+    anyLocation: "Any location",
+    selectArea: "Select an area",
+    selectBarrio: "Select a barrio",
+    selectAreaFirst: "Select an area first",
+    condition: "Condition",
+    genres: "Genre",
+    filterGenres: "Filter genres",
+    languages: "Language",
+    creditValue: "Credit value",
+    showResults: (count, booksLabel) => `Show ${count} ${booksLabel}`,
+    noResults: "No books match",
+    ...labelsOverride,
+  };
+  const [draftValue, setDraftValue] = React.useState(value);
+  React.useEffect(() => {
+    if (visible) setDraftValue(value);
+  }, [value, visible]);
   const [openLocationMenu, setOpenLocationMenu] = React.useState<
     "group" | "location" | null
   >(null);
+  const [genreQuery, setGenreQuery] = React.useState("");
   const safeAreaInsets = {
     top: safeAreaInsetsOverride?.top ?? DEFAULT_SAFE_AREA_INSETS.top,
     right: safeAreaInsetsOverride?.right ?? DEFAULT_SAFE_AREA_INSETS.right,
@@ -109,10 +165,28 @@ export function BookSearchFiltersModal({
   );
   const selectedLocationGroup = locationGroups.find(
     (group) =>
-      group.label === value.locationGroup ||
-      Boolean(value.location && group.options.includes(value.location))
+      group.label === draftValue.locationGroup ||
+      Boolean(draftValue.location && group.options.includes(draftValue.location))
   );
-  const booksLabel = resultCount === 1 ? "book" : "books";
+  const displayResultCount = resultCountForValue?.(draftValue) ?? resultCount;
+  const booksLabel = displayResultCount === 1 ? "book" : "books";
+  const filteredGenreOptions = genreOptions.filter((option) =>
+    option.label.toLowerCase().includes(genreQuery.trim().toLowerCase())
+  );
+
+  const updateDraft = (next: BookSearchFiltersValue) => setDraftValue(next);
+  const resetDraft = () => {
+    setDraftValue({
+      location: undefined,
+      locationGroup: undefined,
+      conditions: [],
+      genres: [],
+      languages: [],
+    });
+    setOpenLocationMenu(null);
+    setGenreQuery("");
+    onReset();
+  };
 
   return (
     <Modal
@@ -135,7 +209,7 @@ export function BookSearchFiltersModal({
         <View style={styles.header}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Close filters"
+            accessibilityLabel={labels.close}
             onPress={onClose}
             style={[
               styles.headerButton,
@@ -152,17 +226,17 @@ export function BookSearchFiltersModal({
             />
           </Pressable>
           <Text style={[styles.title, { color: theme.colors.textPrimary }]}>
-            Filters
+            {labels.title}
           </Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Reset filters"
-            onPress={onReset}
+            accessibilityLabel={labels.reset}
+            onPress={resetDraft}
             hitSlop={8}
             style={styles.resetButton}
           >
             <Text style={[styles.resetText, { color: theme.colors.textMuted }]}>
-              Reset
+              {labels.reset}
             </Text>
           </Pressable>
         </View>
@@ -175,16 +249,16 @@ export function BookSearchFiltersModal({
             <Text
               style={[styles.groupTitle, { color: theme.colors.textMuted }]}
             >
-              Location
+              {labels.location}
             </Text>
             <Text style={[styles.groupHint, { color: theme.colors.textMuted }]}>
               Pick an area first, then a barrio.
             </Text>
             <View style={styles.locationStack}>
               <LocationDropdownButton
-                label="Area"
+                label={labels.area}
                 value={selectedLocationGroup?.label}
-                placeholder="Select an area"
+                placeholder={labels.selectArea}
                 open={openLocationMenu === "group"}
                 theme={theme}
                 onPress={() =>
@@ -204,12 +278,12 @@ export function BookSearchFiltersModal({
                   ]}
                 >
                   <LocationChoice
-                    label="Any location"
-                    selected={!value.locationGroup && !value.location}
+                    label={labels.anyLocation}
+                    selected={!draftValue.locationGroup && !draftValue.location}
                     theme={theme}
                     onPress={() => {
-                      onChange({
-                        ...value,
+                      updateDraft({
+                        ...draftValue,
                         locationGroup: undefined,
                         location: undefined,
                       });
@@ -223,8 +297,8 @@ export function BookSearchFiltersModal({
                       selected={selectedLocationGroup?.label === group.label}
                       theme={theme}
                       onPress={() => {
-                        onChange({
-                          ...value,
+                        updateDraft({
+                          ...draftValue,
                           locationGroup: group.label,
                           location: undefined,
                         });
@@ -236,12 +310,12 @@ export function BookSearchFiltersModal({
               ) : null}
 
               <LocationDropdownButton
-                label="Barrio"
-                value={value.location}
+                label={labels.barrio}
+                value={draftValue.location}
                 placeholder={
                   selectedLocationGroup
-                    ? "Select a barrio"
-                    : "Select an area first"
+                    ? labels.selectBarrio
+                    : labels.selectAreaFirst
                 }
                 open={openLocationMenu === "location"}
                 disabled={!selectedLocationGroup}
@@ -268,11 +342,11 @@ export function BookSearchFiltersModal({
                     <LocationChoice
                       key={location}
                       label={location}
-                      selected={value.location === location}
+                      selected={draftValue.location === location}
                       theme={theme}
                       onPress={() => {
-                        onChange({
-                          ...value,
+                        updateDraft({
+                          ...draftValue,
                           locationGroup: selectedLocationGroup.label,
                           location,
                         });
@@ -293,48 +367,56 @@ export function BookSearchFiltersModal({
           />
 
           <FilterGroup
-            title="Condition"
+            title={labels.condition}
             options={conditionOptions}
-            selectedValues={value.conditions}
+            selectedValues={draftValue.conditions}
             theme={theme}
             onPress={(condition) =>
-              onChange({
-                ...value,
-                conditions: toggleValue(value.conditions, condition),
+              updateDraft({
+                ...draftValue,
+                conditions: toggleValue(draftValue.conditions, condition),
               })
             }
+          />
+
+          <TextInput
+            value={genreQuery}
+            onChangeText={setGenreQuery}
+            placeholder={labels.filterGenres}
+            placeholderTextColor={theme.colors.textMuted}
+            style={styles.genreSearchInput}
           />
 
           <FilterGroup
-            title="Genre"
-            options={genreOptions}
-            selectedValues={value.genres}
+            title={labels.genres}
+            options={filteredGenreOptions}
+            selectedValues={draftValue.genres}
             theme={theme}
             onPress={(genre) =>
-              onChange({
-                ...value,
-                genres: toggleValue(value.genres, genre),
+              updateDraft({
+                ...draftValue,
+                genres: toggleValue(draftValue.genres, genre),
               })
             }
           />
 
-          <View style={styles.group}>
+          {showCreditRange ? <View style={styles.group}>
             <Text
               style={[styles.groupTitle, { color: theme.colors.textMuted }]}
             >
-              Credit value
+              {labels.creditValue}
             </Text>
             <View style={styles.optionRow}>
               {CREDIT_OPTIONS.map((option) => {
-                const selected = value.creditRange === option.value;
+                const selected = draftValue.creditRange === option.value;
                 return (
                   <Pressable
                     key={option.value}
                     accessibilityRole="checkbox"
                     accessibilityState={{ checked: selected }}
                     onPress={() =>
-                      onChange({
-                        ...value,
+                      updateDraft({
+                        ...draftValue,
                         creditRange: selected ? undefined : option.value,
                       })
                     }
@@ -365,7 +447,22 @@ export function BookSearchFiltersModal({
                 );
               })}
             </View>
-          </View>
+          </View> : null}
+
+          {languageOptions.length ? (
+            <FilterGroup
+              title={labels.languages}
+              options={languageOptions}
+              selectedValues={draftValue.languages ?? []}
+              theme={theme}
+              onPress={(language) =>
+                updateDraft({
+                  ...draftValue,
+                  languages: toggleValue(draftValue.languages ?? [], language),
+                })
+              }
+            />
+          ) : null}
         </ScrollView>
 
         <View
@@ -380,15 +477,22 @@ export function BookSearchFiltersModal({
         >
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Show ${resultCount} ${booksLabel}`}
-            onPress={onApply}
+            accessibilityLabel={labels.showResults(displayResultCount, booksLabel)}
+            accessibilityState={{ disabled: displayResultCount === 0 }}
+            disabled={displayResultCount === 0}
+            onPress={() => {
+              onChange(draftValue);
+              onApply();
+            }}
             style={[
               styles.applyButton,
               { backgroundColor: theme.colors.accent },
             ]}
           >
             <Text style={[styles.applyText, { color: theme.colors.surface }]}>
-              Show {resultCount} {booksLabel}
+              {displayResultCount === 0
+                ? labels.noResults
+                : labels.showResults(displayResultCount, booksLabel)}
             </Text>
           </Pressable>
         </View>
@@ -582,6 +686,15 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   content: { paddingBottom: 28 },
+  genreSearchInput: {
+    marginHorizontal: 20,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: swapLibroNavbarTheme.colors.border,
+    paddingHorizontal: 12,
+    color: swapLibroNavbarTheme.colors.textPrimary,
+  },
   group: { paddingHorizontal: 20, paddingTop: 22 },
   groupTitle: {
     marginBottom: 10,
