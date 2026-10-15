@@ -1,3 +1,5 @@
+import { swapLibroSemanticFonts } from 'mdv-typography';
+
 export type SwapLibroNavbarTheme = {
   fontFamily?: string;
   colors: {
@@ -21,8 +23,10 @@ export type SwapLibroNavbarThemeOverride = {
 };
 
 export const swapLibroNavbarTypography = {
-  display: 'Fraunces',
-  body: 'Inter',
+  display: swapLibroSemanticFonts.heading,
+  body: swapLibroSemanticFonts.body,
+  bodyMedium: swapLibroSemanticFonts.bodyMedium,
+  bodySemibold: swapLibroSemanticFonts.bodySemibold,
   catalog: 'IBMPlexMono-SemiBold',
 } as const;
 

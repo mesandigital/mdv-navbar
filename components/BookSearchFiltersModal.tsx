@@ -76,6 +76,7 @@ export type BookSearchFiltersModalProps = {
   resultCount: number;
   resultCountForValue?: (value: BookSearchFiltersValue) => number;
   showCreditRange?: boolean;
+  animationType?: 'none' | 'slide' | 'fade';
   safeAreaInsets?: Partial<BookSearchSafeAreaInsets>;
   theme?: SwapLibroNavbarThemeOverride;
   onChange: (value: BookSearchFiltersValue) => void;
@@ -117,6 +118,7 @@ export function BookSearchFiltersModal({
   resultCount,
   resultCountForValue,
   showCreditRange = true,
+  animationType = 'slide',
   safeAreaInsets: safeAreaInsetsOverride,
   theme: themeOverride,
   onChange,
@@ -193,7 +195,7 @@ export function BookSearchFiltersModal({
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType={animationType}
       presentationStyle="fullScreen"
       onRequestClose={onClose}
     >
@@ -740,10 +742,9 @@ const styles = StyleSheet.create({
   },
   resetButton: { paddingVertical: 9, paddingLeft: 14 },
   resetText: {
-    fontFamily: swapLibroNavbarTypography.body,
+    fontFamily: swapLibroNavbarTypography.bodySemibold,
     fontSize: 15,
     lineHeight: 20,
-    fontWeight: '600',
   },
   content: { paddingBottom: 32 },
   genreSearch: {
@@ -832,10 +833,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   optionText: {
-    fontFamily: swapLibroNavbarTypography.body,
+    fontFamily: swapLibroNavbarTypography.bodyMedium,
     fontSize: 14,
     lineHeight: 19,
-    fontWeight: '500',
   },
   footer: {
     paddingHorizontal: 20,
@@ -850,9 +850,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   applyText: {
-    fontFamily: swapLibroNavbarTypography.body,
-    fontSize: 14.5,
-    lineHeight: 19,
-    fontWeight: '600',
+    fontFamily: swapLibroNavbarTypography.bodySemibold,
+    fontSize: 16,
+    lineHeight: 21,
   },
 });
