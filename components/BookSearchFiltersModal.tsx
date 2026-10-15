@@ -78,6 +78,7 @@ export type BookSearchFiltersModalProps = {
   resultCountForValue?: (value: BookSearchFiltersValue) => number;
   showCreditRange?: boolean;
   animationType?: 'none' | 'slide' | 'fade';
+  renderMode?: 'modal' | 'screen';
   safeAreaInsets?: Partial<BookSearchSafeAreaInsets>;
   theme?: SwapLibroNavbarThemeOverride;
   onChange: (value: BookSearchFiltersValue) => void;
@@ -121,6 +122,7 @@ export function BookSearchFiltersModal({
   resultCountForValue,
   showCreditRange = true,
   animationType = 'slide',
+  renderMode = 'modal',
   safeAreaInsets: safeAreaInsetsOverride,
   theme: themeOverride,
   onChange,
@@ -210,13 +212,19 @@ export function BookSearchFiltersModal({
     onReset();
   };
 
+  const Root = (renderMode === 'screen' ? View : Modal) as React.ComponentType<any>;
+  const rootProps =
+    renderMode === 'screen'
+      ? { style: styles.safeArea }
+      : {
+          visible,
+          animationType,
+          presentationStyle: 'fullScreen',
+          onRequestClose: onClose,
+        };
+
   return (
-    <Modal
-      visible={visible}
-      animationType={animationType}
-      presentationStyle="fullScreen"
-      onRequestClose={onClose}
-    >
+    <Root {...rootProps}>
       <View
         style={[
           styles.safeArea,
@@ -536,7 +544,7 @@ export function BookSearchFiltersModal({
           </Pressable>
         </View>
       </View>
-    </Modal>
+    </Root>
   );
 }
 
