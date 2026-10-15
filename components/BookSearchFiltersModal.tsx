@@ -73,6 +73,7 @@ export type BookSearchFiltersModalProps = {
   conditionOptions: BookSearchFilterOption[];
   genreOptions: BookSearchFilterOption[];
   languageOptions?: BookSearchFilterOption[];
+  initialGenreOptionCount?: number;
   resultCount: number;
   resultCountForValue?: (value: BookSearchFiltersValue) => number;
   showCreditRange?: boolean;
@@ -115,6 +116,7 @@ export function BookSearchFiltersModal({
   conditionOptions,
   genreOptions,
   languageOptions = [],
+  initialGenreOptionCount,
   resultCount,
   resultCountForValue,
   showCreditRange = true,
@@ -174,9 +176,25 @@ export function BookSearchFiltersModal({
   );
   const displayResultCount = resultCountForValue?.(draftValue) ?? resultCount;
   const booksLabel = displayResultCount === 1 ? 'book' : 'books';
-  const filteredGenreOptions = genreOptions.filter(option =>
-    option.label.toLowerCase().includes(genreQuery.trim().toLowerCase()),
-  );
+  const filteredGenreOptions = React.useMemo(() => {
+    const query = genreQuery.trim().toLowerCase();
+    const matches = query
+      ? genreOptions.filter(option =>
+          option.label.toLowerCase().includes(query),
+        )
+      : genreOptions;
+    if (query || initialGenreOptionCount === undefined) return matches;
+
+    const initiallyVisible = matches.slice(0, initialGenreOptionCount);
+    const selectedOutsideInitialSet = matches.filter(
+      option =>
+        draftValue.genres.includes(option.value) &&
+        !initiallyVisible.some(
+          visibleOption => visibleOption.value === option.value,
+        ),
+    );
+    return [...initiallyVisible, ...selectedOutsideInitialSet];
+  }, [draftValue.genres, genreOptions, genreQuery, initialGenreOptionCount]);
 
   const updateDraft = (next: BookSearchFiltersValue) => setDraftValue(next);
   const resetDraft = () => {
@@ -239,7 +257,9 @@ export function BookSearchFiltersModal({
             hitSlop={8}
             style={styles.resetButton}
           >
-            <Text style={[styles.resetText, { color: theme.colors.textMuted }]}>
+            <Text
+              style={[styles.resetText, { color: theme.colors.textPrimary }]}
+            >
               {labels.reset}
             </Text>
           </Pressable>
@@ -746,10 +766,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
   },
-  content: { paddingBottom: 32 },
+  content: { paddingHorizontal: 20, paddingBottom: 32 },
   genreSearch: {
     height: 48,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
     paddingHorizontal: 14,
     flexDirection: 'row',
@@ -766,13 +786,12 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   group: {
-    paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 20,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: swapLibroNavbarTheme.colors.border,
   },
-  locationGroup: { paddingTop: 8 },
+  locationGroup: { paddingTop: 28 },
   groupHeadingRow: {
     minHeight: 24,
     marginBottom: 14,
@@ -795,7 +814,7 @@ const styles = StyleSheet.create({
   locationDropdown: {
     flex: 1,
     minHeight: 48,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
     paddingHorizontal: 14,
     flexDirection: 'row',
@@ -822,20 +841,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
-  optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   optionChip: {
-    minHeight: 36,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1.5,
+    borderRadius: 22,
+    borderWidth: 1,
   },
   optionText: {
-    fontFamily: swapLibroNavbarTypography.bodyMedium,
-    fontSize: 14,
-    lineHeight: 19,
+    fontFamily: swapLibroNavbarTypography.body,
+    fontSize: 15,
+    lineHeight: 20,
   },
   footer: {
     paddingHorizontal: 20,
