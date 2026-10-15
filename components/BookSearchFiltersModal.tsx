@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   Modal,
   Pressable,
@@ -7,16 +7,16 @@ import {
   Text,
   TextInput,
   View,
-} from "react-native";
-import { MaterialDesignIcons } from "@react-native-vector-icons/material-design-icons/static";
+} from 'react-native';
+import { MaterialDesignIcons } from '@react-native-vector-icons/material-design-icons/static';
 import {
   SwapLibroNavbarThemeOverride,
   mergeSwapLibroNavbarTheme,
   swapLibroNavbarTypography,
   swapLibroNavbarTheme,
-} from "../theme";
+} from '../theme';
 
-export type BookSearchCreditRange = "one" | "two-to-three" | "four-plus";
+export type BookSearchCreditRange = 'one' | 'two-to-three' | 'four-plus';
 
 export type BookSearchFiltersValue = {
   /** @deprecated Distance filtering is no longer rendered or applied. */
@@ -89,9 +89,9 @@ const CREDIT_OPTIONS: Array<{
   value: BookSearchCreditRange;
   label: string;
 }> = [
-  { value: "one", label: "1 credit" },
-  { value: "two-to-three", label: "2–3 credits" },
-  { value: "four-plus", label: "4+ credits" },
+  { value: 'one', label: '1 credit' },
+  { value: 'two-to-three', label: '2–3 credits' },
+  { value: 'four-plus', label: '4+ credits' },
 ];
 
 const DEFAULT_SAFE_AREA_INSETS: BookSearchSafeAreaInsets = {
@@ -103,7 +103,7 @@ const DEFAULT_SAFE_AREA_INSETS: BookSearchSafeAreaInsets = {
 
 function toggleValue(values: string[], value: string) {
   return values.includes(value)
-    ? values.filter((item) => item !== value)
+    ? values.filter(item => item !== value)
     : [...values, value];
 }
 
@@ -126,23 +126,23 @@ export function BookSearchFiltersModal({
   labels: labelsOverride,
 }: BookSearchFiltersModalProps) {
   const labels: BookSearchFiltersLabels = {
-    title: "Filters",
-    close: "Close filters",
-    reset: "Reset",
-    location: "Location",
-    area: "Area",
-    barrio: "Barrio",
-    anyLocation: "Any location",
-    selectArea: "Select an area",
-    selectBarrio: "Select a barrio",
-    selectAreaFirst: "Select an area first",
-    condition: "Condition",
-    genres: "Genre",
-    filterGenres: "Filter genres",
-    languages: "Language",
-    creditValue: "Credit value",
+    title: 'Filters',
+    close: 'Close filters',
+    reset: 'Reset',
+    location: 'Location',
+    area: 'Area',
+    barrio: 'Barrio',
+    anyLocation: 'Any location',
+    selectArea: 'Select an area',
+    selectBarrio: 'Select a barrio',
+    selectAreaFirst: 'Select an area first',
+    condition: 'Condition',
+    genres: 'Genre',
+    filterGenres: 'Filter genres',
+    languages: 'Language',
+    creditValue: 'Credit value',
     showResults: (count, booksLabel) => `Show ${count} ${booksLabel}`,
-    noResults: "No books match",
+    noResults: 'No books match',
     ...labelsOverride,
   };
   const [draftValue, setDraftValue] = React.useState(value);
@@ -150,9 +150,9 @@ export function BookSearchFiltersModal({
     if (visible) setDraftValue(value);
   }, [value, visible]);
   const [openLocationMenu, setOpenLocationMenu] = React.useState<
-    "group" | "location" | null
+    'group' | 'location' | null
   >(null);
-  const [genreQuery, setGenreQuery] = React.useState("");
+  const [genreQuery, setGenreQuery] = React.useState('');
   const safeAreaInsets = {
     top: safeAreaInsetsOverride?.top ?? DEFAULT_SAFE_AREA_INSETS.top,
     right: safeAreaInsetsOverride?.right ?? DEFAULT_SAFE_AREA_INSETS.right,
@@ -161,17 +161,19 @@ export function BookSearchFiltersModal({
   };
   const theme = React.useMemo(
     () => mergeSwapLibroNavbarTheme(themeOverride),
-    [themeOverride]
+    [themeOverride],
   );
   const selectedLocationGroup = locationGroups.find(
-    (group) =>
+    group =>
       group.label === draftValue.locationGroup ||
-      Boolean(draftValue.location && group.options.includes(draftValue.location))
+      Boolean(
+        draftValue.location && group.options.includes(draftValue.location),
+      ),
   );
   const displayResultCount = resultCountForValue?.(draftValue) ?? resultCount;
-  const booksLabel = displayResultCount === 1 ? "book" : "books";
-  const filteredGenreOptions = genreOptions.filter((option) =>
-    option.label.toLowerCase().includes(genreQuery.trim().toLowerCase())
+  const booksLabel = displayResultCount === 1 ? 'book' : 'books';
+  const filteredGenreOptions = genreOptions.filter(option =>
+    option.label.toLowerCase().includes(genreQuery.trim().toLowerCase()),
   );
 
   const updateDraft = (next: BookSearchFiltersValue) => setDraftValue(next);
@@ -184,7 +186,7 @@ export function BookSearchFiltersModal({
       languages: [],
     });
     setOpenLocationMenu(null);
-    setGenreQuery("");
+    setGenreQuery('');
     onReset();
   };
 
@@ -245,133 +247,120 @@ export function BookSearchFiltersModal({
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
         >
-          <View style={styles.group}>
-            <Text
-              style={[styles.groupTitle, { color: theme.colors.textMuted }]}
-            >
-              {labels.location}
-            </Text>
-            <Text style={[styles.groupHint, { color: theme.colors.textMuted }]}>
-              Pick an area first, then a barrio.
-            </Text>
-            <View style={styles.locationStack}>
+          <View style={[styles.group, styles.locationGroup]}>
+            <View style={styles.groupHeadingRow}>
+              <Text
+                style={[styles.groupTitle, { color: theme.colors.textPrimary }]}
+              >
+                {labels.location}
+              </Text>
+            </View>
+            <View style={styles.locationRow}>
               <LocationDropdownButton
                 label={labels.area}
                 value={selectedLocationGroup?.label}
                 placeholder={labels.selectArea}
-                open={openLocationMenu === "group"}
+                open={openLocationMenu === 'group'}
                 theme={theme}
                 onPress={() =>
-                  setOpenLocationMenu((current) =>
-                    current === "group" ? null : "group"
+                  setOpenLocationMenu(current =>
+                    current === 'group' ? null : 'group',
                   )
                 }
               />
-              {openLocationMenu === "group" ? (
-                <View
-                  style={[
-                    styles.locationMenu,
-                    {
-                      backgroundColor: theme.colors.inputBackground,
-                      borderColor: theme.colors.border,
-                    },
-                  ]}
-                >
+              <LocationDropdownButton
+                label={labels.barrio}
+                value={draftValue.location}
+                placeholder={labels.barrio}
+                open={openLocationMenu === 'location'}
+                disabled={!selectedLocationGroup}
+                theme={theme}
+                onPress={() => {
+                  if (selectedLocationGroup) {
+                    setOpenLocationMenu(current =>
+                      current === 'location' ? null : 'location',
+                    );
+                  }
+                }}
+              />
+            </View>
+            {openLocationMenu === 'group' ? (
+              <View
+                style={[
+                  styles.locationMenu,
+                  {
+                    backgroundColor: theme.colors.inputBackground,
+                    borderColor: theme.colors.border,
+                  },
+                ]}
+              >
+                <LocationChoice
+                  label={labels.anyLocation}
+                  selected={!draftValue.locationGroup && !draftValue.location}
+                  theme={theme}
+                  onPress={() => {
+                    updateDraft({
+                      ...draftValue,
+                      locationGroup: undefined,
+                      location: undefined,
+                    });
+                    setOpenLocationMenu(null);
+                  }}
+                />
+                {locationGroups.map(group => (
                   <LocationChoice
-                    label={labels.anyLocation}
-                    selected={!draftValue.locationGroup && !draftValue.location}
+                    key={group.label}
+                    label={group.label}
+                    selected={selectedLocationGroup?.label === group.label}
                     theme={theme}
                     onPress={() => {
                       updateDraft({
                         ...draftValue,
-                        locationGroup: undefined,
+                        locationGroup: group.label,
                         location: undefined,
                       });
                       setOpenLocationMenu(null);
                     }}
                   />
-                  {locationGroups.map((group) => (
-                    <LocationChoice
-                      key={group.label}
-                      label={group.label}
-                      selected={selectedLocationGroup?.label === group.label}
-                      theme={theme}
-                      onPress={() => {
-                        updateDraft({
-                          ...draftValue,
-                          locationGroup: group.label,
-                          location: undefined,
-                        });
-                        setOpenLocationMenu(null);
-                      }}
-                    />
-                  ))}
-                </View>
-              ) : null}
-
-              <LocationDropdownButton
-                label={labels.barrio}
-                value={draftValue.location}
-                placeholder={
-                  selectedLocationGroup
-                    ? labels.selectBarrio
-                    : labels.selectAreaFirst
-                }
-                open={openLocationMenu === "location"}
-                disabled={!selectedLocationGroup}
-                theme={theme}
-                onPress={() => {
-                  if (selectedLocationGroup) {
-                    setOpenLocationMenu((current) =>
-                      current === "location" ? null : "location"
-                    );
-                  }
-                }}
-              />
-              {openLocationMenu === "location" && selectedLocationGroup ? (
-                <View
-                  style={[
-                    styles.locationMenu,
-                    {
-                      backgroundColor: theme.colors.inputBackground,
-                      borderColor: theme.colors.border,
-                    },
-                  ]}
-                >
-                  {selectedLocationGroup.options.map((location) => (
-                    <LocationChoice
-                      key={location}
-                      label={location}
-                      selected={draftValue.location === location}
-                      theme={theme}
-                      onPress={() => {
-                        updateDraft({
-                          ...draftValue,
-                          locationGroup: selectedLocationGroup.label,
-                          location,
-                        });
-                        setOpenLocationMenu(null);
-                      }}
-                    />
-                  ))}
-                </View>
-              ) : null}
-            </View>
+                ))}
+              </View>
+            ) : null}
+            {openLocationMenu === 'location' && selectedLocationGroup ? (
+              <View
+                style={[
+                  styles.locationMenu,
+                  {
+                    backgroundColor: theme.colors.inputBackground,
+                    borderColor: theme.colors.border,
+                  },
+                ]}
+              >
+                {selectedLocationGroup.options.map(location => (
+                  <LocationChoice
+                    key={location}
+                    label={location}
+                    selected={draftValue.location === location}
+                    theme={theme}
+                    onPress={() => {
+                      updateDraft({
+                        ...draftValue,
+                        locationGroup: selectedLocationGroup.label,
+                        location,
+                      });
+                      setOpenLocationMenu(null);
+                    }}
+                  />
+                ))}
+              </View>
+            ) : null}
           </View>
-
-          <View
-            style={[
-              styles.dividerBand,
-              { backgroundColor: theme.colors.surfaceMuted },
-            ]}
-          />
 
           <FilterGroup
             title={labels.condition}
             options={conditionOptions}
             selectedValues={draftValue.conditions}
             theme={theme}
-            onPress={(condition) =>
+            onPress={condition =>
               updateDraft({
                 ...draftValue,
                 conditions: toggleValue(draftValue.conditions, condition),
@@ -379,75 +368,100 @@ export function BookSearchFiltersModal({
             }
           />
 
-          <TextInput
-            value={genreQuery}
-            onChangeText={setGenreQuery}
-            placeholder={labels.filterGenres}
-            placeholderTextColor={theme.colors.textMuted}
-            style={styles.genreSearchInput}
-          />
-
-          <FilterGroup
-            title={labels.genres}
-            options={filteredGenreOptions}
-            selectedValues={draftValue.genres}
-            theme={theme}
-            onPress={(genre) =>
-              updateDraft({
-                ...draftValue,
-                genres: toggleValue(draftValue.genres, genre),
-              })
-            }
-          />
-
-          {showCreditRange ? <View style={styles.group}>
-            <Text
-              style={[styles.groupTitle, { color: theme.colors.textMuted }]}
+          <View style={styles.group}>
+            <GroupHeading
+              title={labels.genres}
+              selectedCount={draftValue.genres.length}
+              theme={theme}
+            />
+            <View
+              style={[
+                styles.genreSearch,
+                {
+                  backgroundColor: theme.colors.inputBackground,
+                  borderColor: theme.colors.border,
+                },
+              ]}
             >
-              {labels.creditValue}
-            </Text>
-            <View style={styles.optionRow}>
-              {CREDIT_OPTIONS.map((option) => {
-                const selected = draftValue.creditRange === option.value;
-                return (
-                  <Pressable
-                    key={option.value}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: selected }}
-                    onPress={() =>
-                      updateDraft({
-                        ...draftValue,
-                        creditRange: selected ? undefined : option.value,
-                      })
-                    }
-                    style={[
-                      styles.optionChip,
-                      {
-                        backgroundColor: theme.colors.inputBackground,
-                        borderColor: theme.colors.border,
-                      },
-                      selected
-                        ? {
-                            backgroundColor: theme.colors.accent,
-                            borderColor: theme.colors.accent,
-                          }
-                        : null,
-                    ]}
-                  >
-                    <Text
+              <MaterialDesignIcons
+                name="magnify"
+                size={20}
+                color={theme.colors.textMuted}
+              />
+              <TextInput
+                value={genreQuery}
+                onChangeText={setGenreQuery}
+                placeholder={labels.filterGenres}
+                placeholderTextColor={theme.colors.textMuted}
+                style={[
+                  styles.genreSearchInput,
+                  { color: theme.colors.textPrimary },
+                ]}
+              />
+            </View>
+            <FilterOptions
+              options={filteredGenreOptions}
+              selectedValues={draftValue.genres}
+              theme={theme}
+              onPress={genre =>
+                updateDraft({
+                  ...draftValue,
+                  genres: toggleValue(draftValue.genres, genre),
+                })
+              }
+            />
+          </View>
+
+          {showCreditRange ? (
+            <View style={styles.group}>
+              <Text
+                style={[styles.groupTitle, { color: theme.colors.textMuted }]}
+              >
+                {labels.creditValue}
+              </Text>
+              <View style={styles.optionRow}>
+                {CREDIT_OPTIONS.map(option => {
+                  const selected = draftValue.creditRange === option.value;
+                  return (
+                    <Pressable
+                      key={option.value}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: selected }}
+                      onPress={() =>
+                        updateDraft({
+                          ...draftValue,
+                          creditRange: selected ? undefined : option.value,
+                        })
+                      }
                       style={[
-                        styles.optionText,
-                        { color: theme.colors.textSecondary },
-                        selected ? { color: theme.colors.surface } : null,
+                        styles.optionChip,
+                        {
+                          backgroundColor: theme.colors.inputBackground,
+                          borderColor: theme.colors.border,
+                        },
+                        selected
+                          ? {
+                              backgroundColor: theme.colors.accent,
+                              borderColor: theme.colors.accent,
+                            }
+                          : null,
                       ]}
                     >
-                      {option.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+                      <Text
+                        style={[
+                          styles.optionText,
+                          { color: theme.colors.textSecondary },
+                          selected ? { color: theme.colors.surface } : null,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
-          </View> : null}
+          ) : null}
 
           {languageOptions.length ? (
             <FilterGroup
@@ -455,7 +469,7 @@ export function BookSearchFiltersModal({
               options={languageOptions}
               selectedValues={draftValue.languages ?? []}
               theme={theme}
-              onPress={(language) =>
+              onPress={language =>
                 updateDraft({
                   ...draftValue,
                   languages: toggleValue(draftValue.languages ?? [], language),
@@ -469,7 +483,7 @@ export function BookSearchFiltersModal({
           style={[
             styles.footer,
             {
-              backgroundColor: theme.colors.inputBackground,
+              backgroundColor: theme.colors.surface,
               borderColor: theme.colors.border,
               paddingBottom: Math.max(22, safeAreaInsets.bottom),
             },
@@ -477,7 +491,10 @@ export function BookSearchFiltersModal({
         >
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={labels.showResults(displayResultCount, booksLabel)}
+            accessibilityLabel={labels.showResults(
+              displayResultCount,
+              booksLabel,
+            )}
             accessibilityState={{ disabled: displayResultCount === 0 }}
             disabled={displayResultCount === 0}
             onPress={() => {
@@ -534,10 +551,7 @@ function LocationDropdownButton({
         disabled ? styles.locationDisabled : null,
       ]}
     >
-      <View>
-        <Text style={[styles.locationLabel, { color: theme.colors.textMuted }]}>
-          {label}
-        </Text>
+      <View style={styles.locationValueWrap}>
         <Text
           style={[
             styles.locationValue,
@@ -550,7 +564,7 @@ function LocationDropdownButton({
         </Text>
       </View>
       <MaterialDesignIcons
-        name={open ? "chevron-up" : "chevron-down"}
+        name={open ? 'chevron-up' : 'chevron-down'}
         size={20}
         color={theme.colors.textMuted}
       />
@@ -607,45 +621,91 @@ function FilterGroup({
 }) {
   return (
     <View style={styles.group}>
-      <Text style={[styles.groupTitle, { color: theme.colors.textMuted }]}>
+      <GroupHeading
+        title={title}
+        selectedCount={selectedValues.length}
+        theme={theme}
+      />
+      <FilterOptions
+        options={options}
+        selectedValues={selectedValues}
+        theme={theme}
+        onPress={onPress}
+      />
+    </View>
+  );
+}
+
+function GroupHeading({
+  title,
+  selectedCount,
+  theme,
+}: {
+  title: string;
+  selectedCount: number;
+  theme: ReturnType<typeof mergeSwapLibroNavbarTheme>;
+}) {
+  return (
+    <View style={styles.groupHeadingRow}>
+      <Text style={[styles.groupTitle, { color: theme.colors.textPrimary }]}>
         {title}
       </Text>
-      <View style={styles.optionRow}>
-        {options.map((option) => {
-          const selected = selectedValues.includes(option.value);
-          return (
-            <Pressable
-              key={option.value}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: selected }}
-              onPress={() => onPress(option.value)}
+      {selectedCount ? (
+        <Text style={[styles.selectedCount, { color: theme.colors.textMuted }]}>
+          {selectedCount} selected
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+function FilterOptions({
+  options,
+  selectedValues,
+  theme,
+  onPress,
+}: {
+  options: BookSearchFilterOption[];
+  selectedValues: string[];
+  theme: ReturnType<typeof mergeSwapLibroNavbarTheme>;
+  onPress: (value: string) => void;
+}) {
+  return (
+    <View style={styles.optionRow}>
+      {options.map(option => {
+        const selected = selectedValues.includes(option.value);
+        return (
+          <Pressable
+            key={option.value}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: selected }}
+            onPress={() => onPress(option.value)}
+            style={[
+              styles.optionChip,
+              {
+                backgroundColor: theme.colors.inputBackground,
+                borderColor: theme.colors.border,
+              },
+              selected
+                ? {
+                    backgroundColor: theme.colors.accent,
+                    borderColor: theme.colors.accent,
+                  }
+                : null,
+            ]}
+          >
+            <Text
               style={[
-                styles.optionChip,
-                {
-                  backgroundColor: theme.colors.inputBackground,
-                  borderColor: theme.colors.border,
-                },
-                selected
-                  ? {
-                      backgroundColor: theme.colors.accent,
-                      borderColor: theme.colors.accent,
-                    }
-                  : null,
+                styles.optionText,
+                { color: theme.colors.textSecondary },
+                selected ? { color: theme.colors.surface } : null,
               ]}
             >
-              <Text
-                style={[
-                  styles.optionText,
-                  { color: theme.colors.textSecondary },
-                  selected ? { color: theme.colors.surface } : null,
-                ]}
-              >
-                {option.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+              {option.label}
+            </Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -653,136 +713,146 @@ function FilterGroup({
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   header: {
-    minHeight: 58,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    minHeight: 60,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 8,
   },
   headerButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: "center",
-    justifyContent: "center",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
   },
   title: {
-    position: "absolute",
+    position: 'absolute',
     right: 80,
     left: 80,
-    textAlign: "center",
+    textAlign: 'center',
     fontFamily: swapLibroNavbarTypography.display,
-    fontSize: 17,
-    lineHeight: 22,
-    fontWeight: "600",
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: '600',
   },
   resetButton: { paddingVertical: 9, paddingLeft: 14 },
   resetText: {
     fontFamily: swapLibroNavbarTypography.body,
-    fontSize: 13.5,
-    lineHeight: 18,
-    fontWeight: "600",
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '600',
   },
-  content: { paddingBottom: 28 },
-  genreSearchInput: {
-    marginHorizontal: 20,
-    height: 44,
+  content: { paddingBottom: 32 },
+  genreSearch: {
+    height: 48,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: swapLibroNavbarTheme.colors.border,
-    paddingHorizontal: 12,
-    color: swapLibroNavbarTheme.colors.textPrimary,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 14,
   },
-  group: { paddingHorizontal: 20, paddingTop: 22 },
+  genreSearchInput: {
+    flex: 1,
+    height: 46,
+    paddingVertical: 0,
+    fontFamily: swapLibroNavbarTypography.body,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  group: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: swapLibroNavbarTheme.colors.border,
+  },
+  locationGroup: { paddingTop: 8 },
+  groupHeadingRow: {
+    minHeight: 24,
+    marginBottom: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   groupTitle: {
-    marginBottom: 10,
-    fontFamily: swapLibroNavbarTypography.catalog,
-    fontSize: 10.5,
-    lineHeight: 14,
-    fontWeight: "600",
-    letterSpacing: 1,
-    textTransform: "uppercase",
+    fontFamily: swapLibroNavbarTypography.display,
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: '600',
   },
-  groupHint: {
-    fontFamily: swapLibroNavbarTypography.catalog,
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: -4,
-    marginBottom: 12,
+  selectedCount: {
+    fontFamily: swapLibroNavbarTypography.body,
+    fontSize: 13,
+    lineHeight: 18,
   },
-  locationStack: { gap: 8 },
+  locationRow: { flexDirection: 'row', gap: 10 },
   locationDropdown: {
-    minHeight: 58,
-    borderRadius: 14,
+    flex: 1,
+    minHeight: 48,
+    borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: 14,
-    paddingVertical: 9,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   locationDisabled: { opacity: 0.55 },
-  locationLabel: {
-    fontFamily: swapLibroNavbarTypography.catalog,
-    fontSize: 9.5,
-    lineHeight: 13,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
+  locationValueWrap: { flex: 1 },
   locationValue: {
     fontFamily: swapLibroNavbarTypography.body,
-    fontSize: 13.5,
-    lineHeight: 19,
-    fontWeight: "600",
+    fontSize: 15,
+    lineHeight: 20,
   },
-  locationMenu: { borderRadius: 14, borderWidth: 1, overflow: "hidden" },
+  locationMenu: { borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
   locationChoice: {
     minHeight: 44,
     paddingHorizontal: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   locationChoiceText: {
     fontFamily: swapLibroNavbarTypography.body,
     fontSize: 13,
     lineHeight: 18,
   },
-  dividerBand: { height: 8, marginTop: 22 },
-  optionRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   optionChip: {
     minHeight: 36,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 15,
-    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: 20,
     borderWidth: 1.5,
   },
   optionText: {
     fontFamily: swapLibroNavbarTypography.body,
-    fontSize: 12.5,
-    lineHeight: 17,
-    fontWeight: "600",
+    fontSize: 14,
+    lineHeight: 19,
+    fontWeight: '500',
   },
   footer: {
     paddingHorizontal: 20,
-    paddingTop: 16,
+    minHeight: 96,
+    paddingTop: 12,
     borderTopWidth: 1,
   },
   applyButton: {
-    minHeight: 50,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 16,
+    minHeight: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 14,
   },
   applyText: {
     fontFamily: swapLibroNavbarTypography.body,
     fontSize: 14.5,
     lineHeight: 19,
-    fontWeight: "600",
+    fontWeight: '600',
   },
 });
