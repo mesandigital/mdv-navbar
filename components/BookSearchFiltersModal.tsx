@@ -82,7 +82,7 @@ export type BookSearchFiltersModalProps = {
   onChange: (value: BookSearchFiltersValue) => void;
   onReset: () => void;
   onClose: () => void;
-  onApply: () => void;
+  onApply: (value: BookSearchFiltersValue) => void;
   labels?: Partial<BookSearchFiltersLabels>;
 };
 
@@ -501,7 +501,7 @@ export function BookSearchFiltersModal({
             disabled={displayResultCount === 0}
             onPress={() => {
               onChange(draftValue);
-              onApply();
+              onApply(draftValue);
             }}
             style={[
               styles.applyButton,
