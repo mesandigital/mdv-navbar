@@ -21,8 +21,12 @@ export type BookSearchCreditRange = 'one' | 'two-to-three' | 'four-plus';
 export type BookSearchFiltersValue = {
   /** @deprecated Distance filtering is no longer rendered or applied. */
   distanceKm?: number;
+  /** @deprecated Use `locations`. Single barrio from the old Area/Barrio selects. */
   location?: string;
+  /** @deprecated Use `locations`. */
   locationGroup?: string;
+  /** Neighbourhoods chosen in the Neighbourhoods picker (any number). */
+  locations?: string[];
   conditions: string[];
   genres: string[];
   creditRange?: BookSearchCreditRange;
@@ -50,6 +54,14 @@ export type BookSearchFiltersLabels = {
   /** Shown above the button when nothing matches, so it is never silently disabled. */
   noResultsHint: string;
   selectedCount: (count: number) => string;
+  /** Neighbourhoods mode: section title, row label and empty value. */
+  where: string;
+  neighbourhoods: string;
+  anywhere: string;
+  /** “See all 23 genres”. */
+  seeAllGenres: (count: number) => string;
+  /** Spoken “and N more” after the first two neighbourhoods. */
+  moreLocations: (count: number) => string;
 };
 
 export type BookSearchFilterOption = {
@@ -88,7 +100,20 @@ export type BookSearchFiltersModalProps = {
   onReset: () => void;
   onClose: () => void;
   onApply: (value: BookSearchFiltersValue) => void;
+  /**
+   * Shows one Neighbourhoods row instead of the Area and Barrio selects.
+   * Called with the current, unapplied draft so the host can open its picker
+   * and pass the result back through `value`.
+   */
+  onNeighbourhoodsPress?: (draft: BookSearchFiltersValue) => void;
+  /**
+   * Replaces the genre search with genre chips (selected, then
+   * `popularGenreValues`) and a “See all N genres” button.
+   */
+  onAllGenresPress?: (draft: BookSearchFiltersValue) => void;
+  popularGenreValues?: string[];
   labels?: Partial<BookSearchFiltersLabels>;
+  testID?: string;
 };
 
 const CREDIT_OPTIONS: Array<{
@@ -132,7 +157,11 @@ export function BookSearchFiltersModal({
   onReset,
   onClose,
   onApply,
+  onNeighbourhoodsPress,
+  onAllGenresPress,
+  popularGenreValues = [],
   labels: labelsOverride,
+  testID = 'book-search-filters',
 }: BookSearchFiltersModalProps) {
   const labels: BookSearchFiltersLabels = {
     title: 'Filters',
@@ -154,6 +183,11 @@ export function BookSearchFiltersModal({
     noResults: 'No books match',
     noResultsHint: 'Remove a filter to see books',
     selectedCount: count => `${count} selected`,
+    where: 'Where',
+    neighbourhoods: 'Neighbourhoods',
+    anywhere: 'Anywhere',
+    seeAllGenres: count => `See all ${count} genres`,
+    moreLocations: count => `+${count}`,
     ...labelsOverride,
   };
   const [draftValue, setDraftValue] = React.useState(value);
@@ -203,11 +237,36 @@ export function BookSearchFiltersModal({
     return [...initiallyVisible, ...selectedOutsideInitialSet];
   }, [draftValue.genres, genreOptions, genreQuery, initialGenreOptionCount]);
 
+  const genreChipOptions = React.useMemo(() => {
+    if (!onAllGenresPress) return filteredGenreOptions;
+    const order = [
+      ...draftValue.genres,
+      ...popularGenreValues.filter(genre => !draftValue.genres.includes(genre)),
+    ];
+    return order
+      .map(genre => genreOptions.find(option => option.value === genre))
+      .filter((option): option is BookSearchFilterOption => Boolean(option));
+  }, [
+    draftValue.genres,
+    filteredGenreOptions,
+    genreOptions,
+    onAllGenresPress,
+    popularGenreValues,
+  ]);
+  const draftLocations = draftValue.locations ?? [];
+  const locationSummary =
+    draftLocations.length <= 2
+      ? draftLocations.join(', ')
+      : `${draftLocations.slice(0, 2).join(', ')} ${labels.moreLocations(
+          draftLocations.length - 2,
+        )}`;
+
   const updateDraft = (next: BookSearchFiltersValue) => setDraftValue(next);
   const resetDraft = () => {
     setDraftValue({
       location: undefined,
       locationGroup: undefined,
+      locations: [],
       conditions: [],
       genres: [],
       languages: [],
@@ -220,7 +279,7 @@ export function BookSearchFiltersModal({
   const Root = (renderMode === 'screen' ? View : Modal) as React.ComponentType<any>;
   const rootProps =
     renderMode === 'screen'
-      ? { style: styles.safeArea }
+      ? { style: styles.safeArea, testID }
       : {
           visible,
           animationType,
@@ -281,7 +340,54 @@ export function BookSearchFiltersModal({
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
+          testID={`${testID}-scroll`}
         >
+          {onNeighbourhoodsPress ? (
+            <View style={styles.group}>
+              <GroupHeading
+                title={labels.where}
+                formatSelected={labels.selectedCount}
+                selectedCount={draftLocations.length}
+                theme={theme}
+              />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${labels.neighbourhoods}: ${
+                  locationSummary || labels.anywhere
+                }`}
+                onPress={() => onNeighbourhoodsPress(draftValue)}
+                style={[
+                  styles.locationDropdown,
+                  {
+                    backgroundColor: theme.colors.inputBackground,
+                    borderColor: theme.colors.border,
+                  },
+                ]}
+                testID={`${testID}-neighbourhoods`}
+              >
+                <View style={styles.locationValueWrap}>
+                  <Text
+                    numberOfLines={1}
+                    style={[
+                      styles.locationValue,
+                      {
+                        color: locationSummary
+                          ? theme.colors.textPrimary
+                          : theme.colors.textMuted,
+                      },
+                    ]}
+                  >
+                    {locationSummary || labels.anywhere}
+                  </Text>
+                </View>
+                <MaterialDesignIcons
+                  name="chevron-right"
+                  size={20}
+                  color={theme.colors.textMuted}
+                />
+              </Pressable>
+            </View>
+          ) : (
           <View style={[styles.group, styles.locationGroup]}>
             <View style={styles.groupHeadingRow}>
               <Text
@@ -389,6 +495,7 @@ export function BookSearchFiltersModal({
               </View>
             ) : null}
           </View>
+          )}
 
           <FilterGroup
             title={labels.condition}
@@ -404,6 +511,22 @@ export function BookSearchFiltersModal({
             }
           />
 
+          {languageOptions.length ? (
+            <FilterGroup
+              title={labels.languages}
+              formatSelected={labels.selectedCount}
+              options={languageOptions}
+              selectedValues={draftValue.languages ?? []}
+              theme={theme}
+              onPress={language =>
+                updateDraft({
+                  ...draftValue,
+                  languages: toggleValue(draftValue.languages ?? [], language),
+                })
+              }
+            />
+          ) : null}
+
           <View style={styles.group}>
             <GroupHeading
               title={labels.genres}
@@ -411,6 +534,7 @@ export function BookSearchFiltersModal({
               selectedCount={draftValue.genres.length}
               theme={theme}
             />
+            {onAllGenresPress ? null : (
             <View
               style={[
                 styles.genreSearch,
@@ -436,8 +560,9 @@ export function BookSearchFiltersModal({
                 ]}
               />
             </View>
+            )}
             <FilterOptions
-              options={filteredGenreOptions}
+              options={genreChipOptions}
               selectedValues={draftValue.genres}
               theme={theme}
               onPress={genre =>
@@ -447,6 +572,25 @@ export function BookSearchFiltersModal({
                 })
               }
             />
+            {onAllGenresPress ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => onAllGenresPress(draftValue)}
+                style={styles.seeAll}
+                testID={`${testID}-all-genres`}
+              >
+                <Text
+                  style={[styles.seeAllText, { color: theme.colors.textPrimary }]}
+                >
+                  {labels.seeAllGenres(genreOptions.length)}
+                </Text>
+                <MaterialDesignIcons
+                  name="chevron-right"
+                  size={18}
+                  color={theme.colors.textPrimary}
+                />
+              </Pressable>
+            ) : null}
           </View>
 
           {showCreditRange ? (
@@ -500,21 +644,6 @@ export function BookSearchFiltersModal({
             </View>
           ) : null}
 
-          {languageOptions.length ? (
-            <FilterGroup
-              title={labels.languages}
-              formatSelected={labels.selectedCount}
-              options={languageOptions}
-              selectedValues={draftValue.languages ?? []}
-              theme={theme}
-              onPress={language =>
-                updateDraft({
-                  ...draftValue,
-                  languages: toggleValue(draftValue.languages ?? [], language),
-                })
-              }
-            />
-          ) : null}
         </ScrollView>
 
         <View
@@ -552,6 +681,7 @@ export function BookSearchFiltersModal({
               onChange(draftValue);
               onApply(draftValue);
             }}
+            testID={`${testID}-apply`}
             style={[
               styles.applyButton,
               { backgroundColor: theme.colors.accent },
@@ -802,6 +932,19 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   content: { paddingHorizontal: 20, paddingBottom: 32 },
+  seeAll: {
+    alignSelf: 'flex-start',
+    minHeight: 44,
+    marginTop: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  seeAllText: {
+    fontFamily: swapLibroNavbarTypography.bodySemibold,
+    fontSize: 15,
+    lineHeight: 20,
+  },
   genreSearch: {
     height: 48,
     borderRadius: 14,
