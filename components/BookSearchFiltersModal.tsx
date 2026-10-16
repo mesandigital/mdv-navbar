@@ -47,6 +47,9 @@ export type BookSearchFiltersLabels = {
   creditValue: string;
   showResults: (count: number, booksLabel: string) => string;
   noResults: string;
+  /** Shown above the button when nothing matches, so it is never silently disabled. */
+  noResultsHint: string;
+  selectedCount: (count: number) => string;
 };
 
 export type BookSearchFilterOption = {
@@ -149,6 +152,8 @@ export function BookSearchFiltersModal({
     creditValue: 'Credit value',
     showResults: (count, booksLabel) => `Show ${count} ${booksLabel}`,
     noResults: 'No books match',
+    noResultsHint: 'Remove a filter to see books',
+    selectedCount: count => `${count} selected`,
     ...labelsOverride,
   };
   const [draftValue, setDraftValue] = React.useState(value);
@@ -387,6 +392,7 @@ export function BookSearchFiltersModal({
 
           <FilterGroup
             title={labels.condition}
+            formatSelected={labels.selectedCount}
             options={conditionOptions}
             selectedValues={draftValue.conditions}
             theme={theme}
@@ -401,6 +407,7 @@ export function BookSearchFiltersModal({
           <View style={styles.group}>
             <GroupHeading
               title={labels.genres}
+              formatSelected={labels.selectedCount}
               selectedCount={draftValue.genres.length}
               theme={theme}
             />
@@ -496,6 +503,7 @@ export function BookSearchFiltersModal({
           {languageOptions.length ? (
             <FilterGroup
               title={labels.languages}
+              formatSelected={labels.selectedCount}
               options={languageOptions}
               selectedValues={draftValue.languages ?? []}
               theme={theme}
@@ -519,12 +527,25 @@ export function BookSearchFiltersModal({
             },
           ]}
         >
+          {displayResultCount === 0 ? (
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[styles.noResultsHint, { color: theme.colors.textMuted }]}
+              testID="book-search-filters-no-results-hint"
+            >
+              {labels.noResultsHint}
+            </Text>
+          ) : null}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={labels.showResults(
-              displayResultCount,
-              booksLabel,
-            )}
+            accessibilityLabel={
+              displayResultCount === 0
+                ? labels.noResults
+                : labels.showResults(displayResultCount, booksLabel)
+            }
+            accessibilityHint={
+              displayResultCount === 0 ? labels.noResultsHint : undefined
+            }
             accessibilityState={{ disabled: displayResultCount === 0 }}
             disabled={displayResultCount === 0}
             onPress={() => {
@@ -534,6 +555,7 @@ export function BookSearchFiltersModal({
             style={[
               styles.applyButton,
               { backgroundColor: theme.colors.accent },
+              displayResultCount === 0 ? styles.applyUnavailable : null,
             ]}
           >
             <Text style={[styles.applyText, { color: theme.colors.surface }]}>
@@ -640,10 +662,12 @@ function FilterGroup({
   title,
   options,
   selectedValues,
+  formatSelected,
   theme,
   onPress,
 }: {
   title: string;
+  formatSelected: (count: number) => string;
   options: BookSearchFilterOption[];
   selectedValues: string[];
   theme: ReturnType<typeof mergeSwapLibroNavbarTheme>;
@@ -654,6 +678,7 @@ function FilterGroup({
       <GroupHeading
         title={title}
         selectedCount={selectedValues.length}
+        formatSelected={formatSelected}
         theme={theme}
       />
       <FilterOptions
@@ -669,10 +694,12 @@ function FilterGroup({
 function GroupHeading({
   title,
   selectedCount,
+  formatSelected,
   theme,
 }: {
   title: string;
   selectedCount: number;
+  formatSelected: (count: number) => string;
   theme: ReturnType<typeof mergeSwapLibroNavbarTheme>;
 }) {
   return (
@@ -682,7 +709,7 @@ function GroupHeading({
       </Text>
       {selectedCount ? (
         <Text style={[styles.selectedCount, { color: theme.colors.textMuted }]}>
-          {selectedCount} selected
+          {formatSelected(selectedCount)}
         </Text>
       ) : null}
     </View>
@@ -874,6 +901,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 14,
+  },
+  applyUnavailable: { opacity: 0.4 },
+  noResultsHint: {
+    marginBottom: 8,
+    fontFamily: swapLibroNavbarTypography.body,
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: 'center',
   },
   applyText: {
     fontFamily: swapLibroNavbarTypography.bodySemibold,
