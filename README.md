@@ -90,6 +90,8 @@ Category rendering modes:
 Useful supporting props:
 
 - `showSearch={false}` keeps only the brand/action row and category/segment row.
+- `searchBarStyle` lets a host app tune the search field dimensions without
+  forking the shared navbar (for example, `{ minHeight: 44, borderRadius: 10 }`).
 - `titleOptions` and `selectedTitleOption` replace `brandLabel` with top-level tabs.
 - `titleAccessory` renders custom controls beside the brand/title row.
 - `theme={{ colors: { ... } }}` lets host apps adapt the navbar to their app theme.

@@ -57,6 +57,7 @@ export type CatalogMarketplaceNavbarProps = {
   searchPlaceholder?: string;
   searchInput?: boolean;
   showSearch?: boolean;
+  searchBarStyle?: StyleProp<ViewStyle>;
   insetFilter?: boolean;
   searchValue?: string;
   createAccessibilityLabel?: string;
@@ -289,6 +290,7 @@ export function CatalogMarketplaceNavbar({
   searchPlaceholder = 'Search titles, authors…',
   searchInput = false,
   showSearch = true,
+  searchBarStyle,
   insetFilter = false,
   searchValue,
   createAccessibilityLabel = 'List a book',
@@ -338,7 +340,11 @@ export function CatalogMarketplaceNavbar({
             onPress={onSearchPress}
             onChangeText={onSearchChangeText}
             theme={theme}
-            style={[styles.headerSearch, insetFilter && styles.insetSearch]}
+            style={[
+              styles.headerSearch,
+              insetFilter && styles.insetSearch,
+              searchBarStyle,
+            ]}
           />
           {searchAccessory ? (
             <View style={styles.searchAccessory}>{searchAccessory}</View>
