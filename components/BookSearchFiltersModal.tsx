@@ -60,6 +60,8 @@ export type BookSearchFiltersLabels = {
   anywhere: string;
   /** “See all 23 genres”. */
   seeAllGenres: (count: number) => string;
+  /** With `expandGenresInline`: collapses the full genre list again. */
+  showFewerGenres: string;
   /** Spoken “and N more” after the first two neighbourhoods. */
   moreLocations: (count: number) => string;
 };
@@ -112,6 +114,17 @@ export type BookSearchFiltersModalProps = {
    */
   onAllGenresPress?: (draft: BookSearchFiltersValue) => void;
   popularGenreValues?: string[];
+  /**
+   * Genre chips (selected, then `popularGenreValues`) with a “See all N
+   * genres” button that shows every genre as chips in place, instead of
+   * calling out to a separate picker.
+   */
+  expandGenresInline?: boolean;
+  /**
+   * Draw the built-in header (close, title, reset). Turn off when the host
+   * screen shows a native navigation header with those actions instead.
+   */
+  showHeader?: boolean;
   labels?: Partial<BookSearchFiltersLabels>;
   testID?: string;
 };
@@ -160,6 +173,8 @@ export function BookSearchFiltersModal({
   onNeighbourhoodsPress,
   onAllGenresPress,
   popularGenreValues = [],
+  expandGenresInline = false,
+  showHeader = true,
   labels: labelsOverride,
   testID = 'book-search-filters',
 }: BookSearchFiltersModalProps) {
@@ -187,6 +202,7 @@ export function BookSearchFiltersModal({
     neighbourhoods: 'Neighbourhoods',
     anywhere: 'Anywhere',
     seeAllGenres: count => `See all ${count} genres`,
+    showFewerGenres: 'Show fewer genres',
     moreLocations: count => `+${count}`,
     ...labelsOverride,
   };
@@ -237,8 +253,11 @@ export function BookSearchFiltersModal({
     return [...initiallyVisible, ...selectedOutsideInitialSet];
   }, [draftValue.genres, genreOptions, genreQuery, initialGenreOptionCount]);
 
+  const [allGenresShown, setAllGenresShown] = React.useState(false);
+  const genreChips = Boolean(onAllGenresPress) || expandGenresInline;
   const genreChipOptions = React.useMemo(() => {
-    if (!onAllGenresPress) return filteredGenreOptions;
+    if (expandGenresInline && allGenresShown) return genreOptions;
+    if (!genreChips) return filteredGenreOptions;
     const order = [
       ...draftValue.genres,
       ...popularGenreValues.filter(genre => !draftValue.genres.includes(genre)),
@@ -250,7 +269,9 @@ export function BookSearchFiltersModal({
     draftValue.genres,
     filteredGenreOptions,
     genreOptions,
-    onAllGenresPress,
+    genreChips,
+    expandGenresInline,
+    allGenresShown,
     popularGenreValues,
   ]);
   const draftLocations = draftValue.locations ?? [];
@@ -294,12 +315,13 @@ export function BookSearchFiltersModal({
           styles.safeArea,
           {
             backgroundColor: theme.colors.surface,
-            paddingTop: safeAreaInsets.top,
+            paddingTop: showHeader ? safeAreaInsets.top : 0,
             paddingRight: safeAreaInsets.right,
             paddingLeft: safeAreaInsets.left,
           },
         ]}
       >
+        {showHeader ? (
         <View style={styles.header}>
           <Pressable
             accessibilityRole="button"
@@ -336,6 +358,7 @@ export function BookSearchFiltersModal({
             </Text>
           </Pressable>
         </View>
+        ) : null}
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -534,7 +557,7 @@ export function BookSearchFiltersModal({
               selectedCount={draftValue.genres.length}
               theme={theme}
             />
-            {onAllGenresPress ? null : (
+            {genreChips ? null : (
             <View
               style={[
                 styles.genreSearch,
@@ -572,6 +595,28 @@ export function BookSearchFiltersModal({
                 })
               }
             />
+            {expandGenresInline && !onAllGenresPress ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ expanded: allGenresShown }}
+                onPress={() => setAllGenresShown(shown => !shown)}
+                style={styles.seeAll}
+                testID={`${testID}-all-genres`}
+              >
+                <Text
+                  style={[styles.seeAllText, { color: theme.colors.textPrimary }]}
+                >
+                  {allGenresShown
+                    ? labels.showFewerGenres
+                    : labels.seeAllGenres(genreOptions.length)}
+                </Text>
+                <MaterialDesignIcons
+                  name={allGenresShown ? 'chevron-up' : 'chevron-down'}
+                  size={18}
+                  color={theme.colors.textPrimary}
+                />
+              </Pressable>
+            ) : null}
             {onAllGenresPress ? (
               <Pressable
                 accessibilityRole="button"

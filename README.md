@@ -282,6 +282,11 @@ const [filters, setFilters] = React.useState<BookSearchFiltersValue>({
 />;
 ```
 
+Genre chips and the header are optional:
+
+- `expandGenresInline` shows the selected genres, then `popularGenreValues`, as chips with a “See all N genres” button that expands every genre as chips in place (“Show fewer genres” collapses them). Use it instead of `onAllGenresPress` when you don't want a separate genre picker.
+- `showHeader={false}` hides the built-in close / title / Reset header, for a host screen that shows a native navigation header with those actions. The host's Reset should set `value` to an empty filter; the view resets its draft from `value`.
+
 ## Inbox tabs navbar
 
 ```tsx
