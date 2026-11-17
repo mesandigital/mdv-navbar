@@ -814,7 +814,15 @@ export function CatalogMarketplacePill({
 const styles = StyleSheet.create({
   insetSearchRow: { paddingHorizontal: 20 },
   insetSearch: { minHeight: 48, paddingRight: 52 },
-  insetActions: { position: 'absolute', right: 26, top: 6 },
+  // Centred on the search field whatever its height (bottom matches the
+  // search row's paddingBottom).
+  insetActions: {
+    position: 'absolute',
+    right: 26,
+    top: 0,
+    bottom: 10,
+    justifyContent: 'center',
+  },
   insetFilterButton: {
     width: 36,
     height: 36,
@@ -902,7 +910,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     paddingHorizontal: 16,
-    paddingBottom: 14,
+    paddingBottom: 10,
   },
   navActions: {
     flexDirection: 'row',
