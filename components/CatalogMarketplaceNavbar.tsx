@@ -63,6 +63,13 @@ export type CatalogMarketplaceNavbarProps = {
   createAccessibilityLabel?: string;
   createIcon?: string;
   activeFilterCount?: number;
+  /** Icon for the button inside the search field (default `tune-variant`), e.g. a sort icon. */
+  filterIcon?: string;
+  filterAccessibilityLabel?: string;
+  /** `count` (default) shows activeFilterCount; `dot` shows a dot when it is above 0. */
+  filterBadge?: 'count' | 'dot';
+  /** Side padding of the search row with `insetFilter` (default 20). */
+  horizontalInset?: number;
   theme?: SwapLibroNavbarThemeOverride;
   onSearchPress?: () => void;
   onSearchChangeText?: (text: string) => void;
@@ -172,6 +179,9 @@ type CatalogMarketplaceActionsProps = Pick<
   | 'onLayoutChange'
   | 'theme'
   | 'insetFilter'
+  | 'filterIcon'
+  | 'filterAccessibilityLabel'
+  | 'filterBadge'
 >;
 
 function CatalogMarketplaceActions({
@@ -180,6 +190,9 @@ function CatalogMarketplaceActions({
   createIcon = 'plus',
   layout = 'list',
   insetFilter = false,
+  filterIcon = 'tune-variant',
+  filterAccessibilityLabel = 'Filter results',
+  filterBadge = 'count',
   onCreatePress,
   onFilterPress,
   onLayoutChange,
@@ -219,17 +232,21 @@ function CatalogMarketplaceActions({
       {onFilterPress ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Filter results"
+          accessibilityLabel={filterAccessibilityLabel}
           hitSlop={4}
           onPress={onFilterPress}
           style={buttonStyle}
         >
           <MaterialDesignIcons
-            name="tune-variant"
+            name={filterIcon as any}
             color={theme.colors.accent}
             size={20}
           />
-          {activeFilterCount > 0 ? (
+          {activeFilterCount > 0 && filterBadge === 'dot' ? (
+            <View
+              style={[styles.filterDot, { backgroundColor: theme.colors.accent }]}
+            />
+          ) : activeFilterCount > 0 ? (
             <View
               style={[
                 styles.filterBadge,
@@ -296,6 +313,10 @@ export function CatalogMarketplaceNavbar({
   createAccessibilityLabel = 'List a book',
   createIcon = 'plus',
   activeFilterCount = 0,
+  filterIcon,
+  filterAccessibilityLabel,
+  filterBadge,
+  horizontalInset = 20,
   theme: themeOverride,
   onSearchPress,
   onSearchChangeText,
@@ -331,7 +352,12 @@ export function CatalogMarketplaceNavbar({
         />
       ) : null}
       {showSearch ? (
-        <View style={[styles.searchRow, insetFilter && styles.insetSearchRow]}>
+        <View
+          style={[
+            styles.searchRow,
+            insetFilter && { paddingHorizontal: horizontalInset },
+          ]}
+        >
           <CatalogMarketplaceSearchBar
             input={searchInput}
             label={searchLabel}
@@ -349,9 +375,18 @@ export function CatalogMarketplaceNavbar({
           {searchAccessory ? (
             <View style={styles.searchAccessory}>{searchAccessory}</View>
           ) : null}
-          <View style={insetFilter ? styles.insetActions : undefined}>
+          <View
+            style={
+              insetFilter
+                ? [styles.insetActions, { right: horizontalInset + 6 }]
+                : undefined
+            }
+          >
             <CatalogMarketplaceActions
               insetFilter={insetFilter}
+              filterIcon={filterIcon}
+              filterAccessibilityLabel={filterAccessibilityLabel}
+              filterBadge={filterBadge}
               activeFilterCount={activeFilterCount}
               createAccessibilityLabel={createAccessibilityLabel}
               createIcon={createIcon}
@@ -812,7 +847,6 @@ export function CatalogMarketplacePill({
 }
 
 const styles = StyleSheet.create({
-  insetSearchRow: { paddingHorizontal: 20 },
   insetSearch: { minHeight: 48, paddingRight: 52 },
   // Centred on the search field whatever its height (bottom matches the
   // search row's paddingBottom).
@@ -930,6 +964,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
+  },
+  filterDot: {
+    position: 'absolute',
+    right: 5,
+    top: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   filterBadge: {
     position: 'absolute',
